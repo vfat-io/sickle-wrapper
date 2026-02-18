@@ -13,5 +13,9 @@ docs/
 # Dotenv file
 .env
 
+# SDK
+sdk/node_modules/
+sdk/dist/
+
 # Claude Code local settings
 .claude/
