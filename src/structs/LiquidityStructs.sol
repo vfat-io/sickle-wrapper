@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+struct AddLiquidityParams {
+    address router;
+    address lpToken;
+    address[] tokens;
+    uint256[] desiredAmounts;
+    uint256[] minAmounts;
+    bytes extraData;
+}
+
+struct RemoveLiquidityParams {
+    address router;
+    address lpToken;
+    address[] tokens;
+    uint256 lpAmountIn;
+    uint256[] minAmountsOut;
+    bytes extraData;
+}
