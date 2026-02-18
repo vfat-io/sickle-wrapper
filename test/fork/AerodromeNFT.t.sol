@@ -16,6 +16,7 @@ import {
     NftWithdraw,
     NftHarvest,
     NftRebalance,
+    NftMove,
     SimpleNftHarvest
 } from "../../src/structs/NftFarmStrategyStructs.sol";
 import { NftZapIn, NftZapOut } from "../../src/structs/NftZapStructs.sol";
@@ -36,6 +37,7 @@ import {
     ISlipstreamNFTManager,
     IPositionManager
 } from "./ForkTestBase.sol";
+import { MockExtraData } from "./MockSwapConnector.sol";
 
 /// @title AerodromeNFT Fork Tests
 /// @notice Full lifecycle tests for CL (NFT) positions through the wrapper.
@@ -637,6 +639,150 @@ contract AerodromeNFTForkTest is ForkTestBase {
     }
 
     // =====================================================================
+    // compoundNft() — NOT TESTED
+    // SickleWrapper.compoundNft() hardcodes inPlace=true, which is not
+    // compatible with Slipstream gauge-staked NFTs: the NFT must be
+    // unstaked before increaseLiquidity can be called. This is the same
+    // limitation as increaseNft(inPlace=true) / decreaseNft(inPlace=true).
+    // =====================================================================
+
+    // =====================================================================
+    // rebalanceNft() — harvest + withdraw + re-deposit to new tick range
+    // =====================================================================
+
+    function test_nft_rebalanceNft() public {
+        uint256 tokenId = _mintCLPosition(user);
+        _depositNFT(tokenId);
+
+        vm.warp(block.timestamp + 7 days);
+        vm.roll(block.number + 50_000);
+
+        // Harvest with mock swap: AERO → WETH
+        NftHarvest memory harvestParams = _buildNftHarvestWithSwap();
+
+        // Withdraw full liquidity
+        uint128 liquidity = _getLiquidity(tokenId);
+        NftWithdraw memory withdrawParams =
+            _buildNftWithdraw(tokenId, liquidity);
+
+        // Re-deposit to a new (wider) tick range
+        ICLPool pool = ICLPool(POOL);
+        int24 tickSpacing = pool.tickSpacing();
+        (, int24 currentTick,,,,) = pool.slot0();
+        int24 newTickLower = _closestLowerTick(
+            currentTick - 20 * tickSpacing, tickSpacing
+        );
+        int24 newTickUpper = _closestUpperTick(
+            currentTick + 20 * tickSpacing, tickSpacing
+        );
+
+        NftIncrease memory increaseParams = _buildNftIncreaseWithTicks(
+            0, 0, 0, newTickLower, newTickUpper
+        );
+
+        NftRebalance memory rebalanceParams = NftRebalance({
+            pool: IUniswapV3Pool(POOL),
+            position: _nftPosition(tokenId),
+            harvest: harvestParams,
+            withdraw: withdrawParams,
+            increase: increaseParams
+        });
+
+        // Compute args before prank (view calls consume prank)
+        address[] memory sweepTokens = _poolTokenArray();
+
+        vm.prank(user);
+        wrapper.rebalanceNft(rebalanceParams, sweepTokens);
+
+        // Verify a new position was staked
+        address sickle = wrapper.sickleFactory().predict(address(wrapper));
+        assertGt(
+            ICLGauge(GAUGE).stakedLength(sickle),
+            0,
+            "sickle should have staked NFT after rebalance"
+        );
+
+        // Fee recipient should have received a WETH fee (harvest swaps AERO→WETH)
+        assertGt(
+            IERC20(ICLPool(POOL).token0()).balanceOf(feeRecipient),
+            0,
+            "fee recipient should have WETH fee"
+        );
+    }
+
+    // =====================================================================
+    // moveNft() — harvest + withdraw + deposit to new position
+    // =====================================================================
+
+    function test_nft_moveNft() public {
+        uint256 tokenId = _mintCLPosition(user);
+        _depositNFT(tokenId);
+
+        vm.warp(block.timestamp + 7 days);
+        vm.roll(block.number + 50_000);
+
+        // Harvest with no swap — claim raw AERO
+        NftHarvest memory harvestParams = _buildSimpleNftHarvest();
+
+        // Withdraw full liquidity
+        uint128 liquidity = _getLiquidity(tokenId);
+        NftWithdraw memory withdrawParams =
+            _buildNftWithdraw(tokenId, liquidity);
+
+        // Re-deposit into a new position (wider tick range)
+        ICLPool pool = ICLPool(POOL);
+        int24 tickSpacing = pool.tickSpacing();
+        (, int24 currentTick,,,,) = pool.slot0();
+        int24 newTickLower = _closestLowerTick(
+            currentTick - 20 * tickSpacing, tickSpacing
+        );
+        int24 newTickUpper = _closestUpperTick(
+            currentTick + 20 * tickSpacing, tickSpacing
+        );
+
+        NftDeposit memory depositParams = _buildNftDepositWithTicks(
+            newTickLower, newTickUpper
+        );
+
+        NftMove memory moveParams = NftMove({
+            pool: IUniswapV3Pool(POOL),
+            position: _nftPosition(tokenId),
+            harvest: harvestParams,
+            withdraw: withdrawParams,
+            deposit: depositParams
+        });
+
+        // Compute args before prank
+        address[] memory sweepTokens = _poolTokenArray();
+        NftSettings memory settings = _emptyNftSettings();
+
+        vm.prank(user);
+        wrapper.moveNft(moveParams, settings, sweepTokens);
+
+        // Verify a new position was staked in the same gauge
+        address sickle = wrapper.sickleFactory().predict(address(wrapper));
+        assertGt(
+            ICLGauge(GAUGE).stakedLength(sickle),
+            0,
+            "sickle should have staked NFT after move"
+        );
+
+        // Fee recipient should have AERO fee (no swap in harvest)
+        assertGt(
+            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
+            0,
+            "fee recipient should have AERO fee"
+        );
+
+        // User should have received rewards minus fee
+        assertGt(
+            IERC20(REWARD_TOKEN).balanceOf(user),
+            0,
+            "user should have AERO rewards"
+        );
+    }
+
+    // =====================================================================
     // Rescue NFT
     // =====================================================================
 
@@ -683,6 +829,135 @@ contract AerodromeNFTForkTest is ForkTestBase {
         ICLPool pool = ICLPool(POOL);
         deal(pool.token0(), to, amount0);
         deal(pool.token1(), to, amount1);
+    }
+
+    /// @dev Build NftHarvest with a mock swap: AERO → WETH via MockSwapConnector.
+    ///      sweepTokens = [WETH] (the OUTPUT of the swap) so the strategy
+    ///      sweeps WETH from Sickle to wrapper, and the wrapper routes it
+    ///      through the RewardRouter.
+    function _buildNftHarvestWithSwap()
+        internal
+        view
+        returns (NftHarvest memory)
+    {
+        address[] memory rewardTokens = new address[](1);
+        rewardTokens[0] = REWARD_TOKEN;
+
+        address weth = ICLPool(POOL).token0();
+
+        // Swap AERO → WETH via mock connector
+        SwapParams[] memory swaps = new SwapParams[](1);
+        swaps[0] = SwapParams({
+            tokenApproval: mockRouter,
+            router: mockRouter,
+            amountIn: 1, // mock connector uses deal(), ignores real amount
+            desiredAmountOut: 0,
+            minAmountOut: 0.5e18, // deal 0.5 WETH
+            tokenIn: REWARD_TOKEN,
+            tokenOut: weth,
+            extraData: abi.encode(MockExtraData({ tokenOut: weth }))
+        });
+
+        address[] memory outputTokens = new address[](1);
+        outputTokens[0] = weth;
+
+        // sweepTokens = output tokens (WETH), not input (AERO)
+        address[] memory sweepTokens = new address[](1);
+        sweepTokens[0] = weth;
+
+        return NftHarvest({
+            harvest: SimpleNftHarvest({
+                rewardTokens: rewardTokens,
+                amount0Max: 0,
+                amount1Max: 0,
+                extraData: ""
+            }),
+            swaps: swaps,
+            outputTokens: outputTokens,
+            sweepTokens: sweepTokens
+        });
+    }
+
+    /// @dev Build NftIncrease with explicit tick range (for rebalance to new range)
+    function _buildNftIncreaseWithTicks(
+        uint256 tokenId,
+        uint256 amount0,
+        uint256 amount1,
+        int24 tickLower,
+        int24 tickUpper
+    ) internal view returns (NftIncrease memory) {
+        address[] memory tokensIn = _poolTokenArray();
+
+        uint256[] memory amountsIn = new uint256[](2);
+        amountsIn[0] = amount0;
+        amountsIn[1] = amount1;
+
+        ICLPool pool = ICLPool(POOL);
+        int24 tickSpacing = pool.tickSpacing();
+
+        return NftIncrease({
+            tokensIn: tokensIn,
+            amountsIn: amountsIn,
+            zap: NftZapIn({
+                swaps: new SwapParams[](0),
+                addLiquidityParams: NftAddLiquidity({
+                    nft: INonfungiblePositionManager(NFT_MANAGER),
+                    tokenId: tokenId,
+                    pool: Pool({
+                        token0: pool.token0(),
+                        token1: pool.token1(),
+                        fee: uint24(tickSpacing)
+                    }),
+                    tickLower: tickLower,
+                    tickUpper: tickUpper,
+                    amount0Desired: amount0,
+                    amount1Desired: amount1,
+                    amount0Min: 0,
+                    amount1Min: 0,
+                    extraData: abi.encode(tickSpacing)
+                })
+            }),
+            extraData: ""
+        });
+    }
+
+    /// @dev Build NftDeposit for move: re-deposit to new tick range.
+    /// No tokensIn — the Sickle already has tokens from the withdraw step.
+    function _buildNftDepositWithTicks(
+        int24 tickLower,
+        int24 tickUpper
+    ) internal view returns (NftDeposit memory) {
+        ICLPool pool = ICLPool(POOL);
+        int24 tickSpacing = pool.tickSpacing();
+
+        return NftDeposit({
+            farm: _farm(),
+            nft: INonfungiblePositionManager(NFT_MANAGER),
+            increase: NftIncrease({
+                tokensIn: new address[](0),
+                amountsIn: new uint256[](0),
+                zap: NftZapIn({
+                    swaps: new SwapParams[](0),
+                    addLiquidityParams: NftAddLiquidity({
+                        nft: INonfungiblePositionManager(NFT_MANAGER),
+                        tokenId: 0, // new mint
+                        pool: Pool({
+                            token0: pool.token0(),
+                            token1: pool.token1(),
+                            fee: uint24(tickSpacing)
+                        }),
+                        tickLower: tickLower,
+                        tickUpper: tickUpper,
+                        amount0Desired: 0,
+                        amount1Desired: 0,
+                        amount0Min: 0,
+                        amount1Min: 0,
+                        extraData: abi.encode(tickSpacing)
+                    })
+                }),
+                extraData: ""
+            })
+        });
     }
 
     /// @dev Build NftDeposit params for a new mint from two tokens

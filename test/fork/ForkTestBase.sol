@@ -15,6 +15,7 @@ import { ISickleFactory } from "../../src/interfaces/ISickleFactory.sol";
 import { IRewardRouter } from "../../src/interfaces/IRewardRouter.sol";
 import { INonfungiblePositionManager } from
     "../../src/interfaces/external/INonfungiblePositionManager.sol";
+import { MockSwapConnector } from "./MockSwapConnector.sol";
 
 // =========================================================================
 // Base Mainnet Addresses
@@ -53,6 +54,8 @@ library Base {
         0x9699bE38E6D54E51a4b36645726FEE9CC736EB45;
     address constant SICKLE_REGISTRY =
         0x2Ef5EAFA8711E2441Bd519EED5d09F8DFEf2Ecf3;
+    address constant CONNECTOR_REGISTRY =
+        0x53E205dcEb0a2e95c88C6a0e80280d6003221FAF;
 }
 
 // =========================================================================
@@ -167,6 +170,21 @@ interface ISickleRegistry {
         address[] calldata callers,
         bool whitelisted
     ) external;
+    function setWhitelistedTargets(
+        address[] calldata targets,
+        bool whitelisted
+    ) external;
+}
+
+interface IConnectorRegistry {
+    function admin() external view returns (address);
+    function setConnectors(
+        address[] calldata targets,
+        address[] calldata connectors
+    ) external;
+    function connectorOf(
+        address target
+    ) external view returns (address);
 }
 
 // =========================================================================
@@ -182,6 +200,10 @@ abstract contract ForkTestBase is Test {
     IFarmStrategy farmStrategy;
     INftFarmStrategy nftFarmStrategy;
     ISickleFactory sickleFactory;
+
+    /// @dev Mock router address used as the "swap router" in SwapParams.
+    ///      The MockSwapConnector is registered as the connector for this address.
+    address mockRouter = makeAddr("mockRouter");
 
     address user = makeAddr("user");
     address feeRecipient = makeAddr("feeRecipient");
@@ -205,9 +227,9 @@ abstract contract ForkTestBase is Test {
             IRewardRouter(address(rewardRouter))
         );
 
-        // Whitelist the wrapper factory's strategy addresses in SickleRegistry
-        // so that they can call Sickles. The deployed strategies are already
-        // whitelisted — no action needed from us.
+        // Deploy MockSwapConnector and register it in the deployed Sickle
+        // infrastructure so we can test compound/rebalance/move with mock swaps.
+        _deployMockSwapConnector();
 
         vm.label(Base.WETH, "WETH");
         vm.label(Base.USDC, "USDC");
@@ -217,9 +239,44 @@ abstract contract ForkTestBase is Test {
         vm.label(Base.SICKLE_FACTORY, "SickleFactory");
     }
 
+    /// @dev Deploy a MockSwapConnector and register it in the deployed
+    ///      ConnectorRegistry + SickleRegistry so the Sickle can delegatecall it.
+    function _deployMockSwapConnector() internal {
+        MockSwapConnector connector = new MockSwapConnector();
+        vm.label(address(connector), "MockSwapConnector");
+
+        // 1. Whitelist the connector as a delegatecall target in SickleRegistry
+        ISickleRegistry registry = ISickleRegistry(Base.SICKLE_REGISTRY);
+        address registryAdmin = registry.admin();
+
+        vm.startPrank(registryAdmin);
+        address[] memory targets = new address[](1);
+        targets[0] = address(connector);
+        registry.setWhitelistedTargets(targets, true);
+        vm.stopPrank();
+
+        // 2. Register the connector for mockRouter in ConnectorRegistry
+        IConnectorRegistry connectorRegistry =
+            IConnectorRegistry(Base.CONNECTOR_REGISTRY);
+        address connectorAdmin = connectorRegistry.admin();
+
+        vm.startPrank(connectorAdmin);
+        address[] memory routers = new address[](1);
+        routers[0] = mockRouter;
+        address[] memory connectors = new address[](1);
+        connectors[0] = address(connector);
+        connectorRegistry.setConnectors(routers, connectors);
+        vm.stopPrank();
+    }
+
     function _createWrapper() internal returns (SickleWrapper wrapper) {
         wrapper = factory.getOrCreateWrapper(user);
         vm.label(address(wrapper), "SickleWrapper");
+
+        // Allow cheatcodes (deal) on the Sickle address so MockSwapConnector
+        // can mint tokens when delegatecalled by the Sickle.
+        address sickle = wrapper.sickleFactory().predict(address(wrapper));
+        vm.allowCheatcodes(sickle);
     }
 
     /// @dev Round tick down to nearest tickSpacing

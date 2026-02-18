@@ -22,6 +22,7 @@ import { SwapParams } from "../../src/structs/SwapStructs.sol";
 import { PositionSettings } from "../../src/structs/PositionSettingsStructs.sol";
 
 import { ForkTestBase, Base, IVAMMPool, IVAMMGauge } from "./ForkTestBase.sol";
+import { MockExtraData } from "./MockSwapConnector.sol";
 
 /// @title AerodromeERC20 Fork Tests
 /// @notice Full lifecycle tests for ERC20 (VAMM) positions through the wrapper.
@@ -611,6 +612,58 @@ contract AerodromeERC20ForkTest is ForkTestBase {
     }
 
     // =====================================================================
+    // compound() — harvest rewards, route (compound mode), swap, re-deposit
+    // =====================================================================
+
+    function test_erc20_compound() public {
+        // Deposit real tokens so the position is valid for re-deposit
+        _depositTwoToken(1e18, 3000e6);
+
+        uint256 stakedBefore = _stakedBalance();
+        assertGt(stakedBefore, 0, "should have staked LP");
+
+        vm.warp(block.timestamp + 7 days);
+        vm.roll(block.number + 50_000);
+
+        // Build harvest params: claim AERO, then swap AERO→WETH via mock
+        HarvestParams memory harvestParams = _buildHarvestParamsWithSwap();
+
+        // Sweep WETH (the OUTPUT of the swap, not input AERO)
+        address[] memory harvestSweepTokens = new address[](1);
+        harvestSweepTokens[0] = Base.WETH;
+
+        // Build deposit params: re-deposit WETH into the pool.
+        // The wrapper's WETH balance after harvest+route is reduced by both
+        // the Sickle protocol fee (~0.9%) and our RewardRouter fee (5%).
+        // Use a conservative amount that's safely below the actual balance.
+        DepositParams memory depositParams =
+            _buildCompoundDepositParams(0.45e18);
+        address[] memory depositSweepTokens = _tokenPairArray();
+
+        vm.prank(user);
+        wrapper.compound(
+            _farm(),
+            harvestParams,
+            harvestSweepTokens,
+            depositParams,
+            depositSweepTokens
+        );
+
+        // Staked LP should have increased from the compounded rewards
+        uint256 stakedAfter = _stakedBalance();
+        assertGt(
+            stakedAfter, stakedBefore, "staked LP should increase after compound"
+        );
+
+        // Fee recipient should have received a WETH fee (harvest swaps AERO→WETH)
+        assertGt(
+            IERC20(Base.WETH).balanceOf(feeRecipient),
+            0,
+            "fee recipient should have WETH fee"
+        );
+    }
+
+    // =====================================================================
     // Rescue functions
     // =====================================================================
 
@@ -705,6 +758,92 @@ contract AerodromeERC20ForkTest is ForkTestBase {
             swaps: new SwapParams[](0),
             extraData: "",
             tokensOut: tokensOut
+        });
+    }
+
+    /// @dev Build HarvestParams that swap AERO → WETH via the mock router.
+    /// The mock router just deal()s the output tokens.
+    function _buildHarvestParamsWithSwap()
+        internal
+        view
+        returns (HarvestParams memory)
+    {
+        address[] memory tokensOut = new address[](1);
+        tokensOut[0] = Base.WETH;
+
+        SwapParams[] memory swaps = new SwapParams[](1);
+        swaps[0] = SwapParams({
+            tokenApproval: mockRouter,
+            router: mockRouter,
+            amountIn: 1, // mock connector ignores actual amount, uses deal()
+            desiredAmountOut: 0,
+            minAmountOut: 0.5e18, // mock will deal this much WETH
+            tokenIn: REWARD_TOKEN,
+            tokenOut: Base.WETH,
+            extraData: abi.encode(MockExtraData({ tokenOut: Base.WETH }))
+        });
+
+        return HarvestParams({
+            swaps: swaps,
+            extraData: "",
+            tokensOut: tokensOut
+        });
+    }
+
+    /// @dev Build DepositParams for re-depositing WETH into the VAMM pool.
+    /// Used in compound: the router returns WETH, which must be split into
+    /// both pool tokens (volatile AMMs require both). Includes a mock swap
+    /// WETH → USDC for half the amount.
+    function _buildCompoundDepositParams(
+        uint256 wethAmount
+    ) internal view returns (DepositParams memory) {
+        IVAMMPool pool = IVAMMPool(LP_TOKEN);
+        address token0 = pool.token0();
+        address token1 = pool.token1();
+
+        address[] memory tokensIn = new address[](1);
+        tokensIn[0] = Base.WETH;
+
+        uint256[] memory amountsIn = new uint256[](1);
+        amountsIn[0] = wethAmount;
+
+        address[] memory liqTokens = new address[](2);
+        liqTokens[0] = token0;
+        liqTokens[1] = token1;
+
+        // Swap half WETH → USDC via mock so we have both pool tokens
+        uint256 halfWeth = wethAmount / 2;
+        // Approximate USDC amount for half WETH at ~$3000
+        uint256 usdcOut = 1400e6;
+
+        SwapParams[] memory swaps = new SwapParams[](1);
+        swaps[0] = SwapParams({
+            tokenApproval: mockRouter,
+            router: mockRouter,
+            amountIn: halfWeth,
+            desiredAmountOut: 0,
+            minAmountOut: usdcOut,
+            tokenIn: Base.WETH,
+            tokenOut: Base.USDC,
+            extraData: abi.encode(MockExtraData({ tokenOut: Base.USDC }))
+        });
+
+        return DepositParams({
+            farm: _farm(),
+            tokensIn: tokensIn,
+            amountsIn: amountsIn,
+            zap: ZapIn({
+                swaps: swaps,
+                addLiquidityParams: AddLiquidityParams({
+                    router: Base.AERODROME_ROUTER,
+                    lpToken: LP_TOKEN,
+                    tokens: liqTokens,
+                    desiredAmounts: new uint256[](2),
+                    minAmounts: new uint256[](2),
+                    extraData: abi.encode(false) // volatile pool
+                })
+            }),
+            extraData: ""
         });
     }
 
