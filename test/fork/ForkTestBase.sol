@@ -40,6 +40,10 @@ library Base {
     address constant SLIPSTREAM_NFT_MANAGER =
         0x827922686190790b37229fd06084350E74485b72;
 
+    // Aerodrome routers
+    address constant AERODROME_ROUTER =
+        0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43;
+
     // Deployed Sickle contracts on Base
     address constant SICKLE_FACTORY =
         0x71D234A3e1dfC161cc1d081E6496e76627baAc31;
@@ -114,6 +118,46 @@ interface ISlipstreamNFTManager {
             uint128 liquidity,
             uint256 amount0,
             uint256 amount1
+        );
+}
+
+interface IVAMMPool {
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+    function getReserves()
+        external
+        view
+        returns (
+            uint256 reserve0,
+            uint256 reserve1,
+            uint256 blockTimestampLast
+        );
+    function totalSupply() external view returns (uint256);
+}
+
+interface IVAMMGauge {
+    function balanceOf(address account) external view returns (uint256);
+}
+
+interface IPositionManager {
+    function positions(
+        uint256 tokenId
+    )
+        external
+        view
+        returns (
+            uint96 nonce,
+            address operator,
+            address token0,
+            address token1,
+            int24 tickSpacing,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            uint256 tokensOwed0,
+            uint256 tokensOwed1
         );
 }
 
