@@ -3,12 +3,12 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
 
-import { WrapperFactory } from "../src/WrapperFactory.sol";
-import { RewardRouter } from "../src/RewardRouter.sol";
-import { IFarmStrategy } from "../src/interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "../src/interfaces/INftFarmStrategy.sol";
-import { ISickleFactory } from "../src/interfaces/ISickleFactory.sol";
-import { IRewardRouter } from "../src/interfaces/IRewardRouter.sol";
+import {WrapperFactory} from "../src/WrapperFactory.sol";
+import {RewardRouter} from "../src/RewardRouter.sol";
+import {IFarmStrategy} from "../src/interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "../src/interfaces/INftFarmStrategy.sol";
+import {ISickleFactory} from "../src/interfaces/ISickleFactory.sol";
+import {IRewardRouter} from "../src/interfaces/IRewardRouter.sol";
 
 /// @notice Deployment script for the sickle-wrapper system.
 ///
@@ -31,8 +31,7 @@ contract DeployScript is Script {
 
         vm.startBroadcast();
 
-        RewardRouter router =
-            new RewardRouter(msg.sender, feeBps, feeRecipient);
+        RewardRouter router = new RewardRouter(msg.sender, feeBps, feeRecipient);
 
         WrapperFactory factory = new WrapperFactory(
             IFarmStrategy(farmStrategy),

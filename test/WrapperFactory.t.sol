@@ -3,16 +3,16 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
-import { WrapperFactory } from "../src/WrapperFactory.sol";
-import { SickleWrapper } from "../src/SickleWrapper.sol";
-import { IFarmStrategy } from "../src/interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "../src/interfaces/INftFarmStrategy.sol";
-import { IRewardRouter } from "../src/interfaces/IRewardRouter.sol";
+import {WrapperFactory} from "../src/WrapperFactory.sol";
+import {SickleWrapper} from "../src/SickleWrapper.sol";
+import {IFarmStrategy} from "../src/interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "../src/interfaces/INftFarmStrategy.sol";
+import {IRewardRouter} from "../src/interfaces/IRewardRouter.sol";
 
-import { MockFarmStrategy } from "./mocks/MockFarmStrategy.sol";
-import { MockNftFarmStrategy } from "./mocks/MockNftFarmStrategy.sol";
-import { MockSickleFactory } from "./mocks/MockSickleFactory.sol";
-import { MockRewardRouter } from "./mocks/MockRewardRouter.sol";
+import {MockFarmStrategy} from "./mocks/MockFarmStrategy.sol";
+import {MockNftFarmStrategy} from "./mocks/MockNftFarmStrategy.sol";
+import {MockSickleFactory} from "./mocks/MockSickleFactory.sol";
+import {MockRewardRouter} from "./mocks/MockRewardRouter.sol";
 
 contract WrapperFactoryTest is Test {
     event WrapperCreated(address indexed user, address wrapper);
@@ -88,9 +88,7 @@ contract WrapperFactoryTest is Test {
 
     function test_immutables() public {
         assertEq(address(factory.farmStrategy()), address(farmStrategy));
-        assertEq(
-            address(factory.nftFarmStrategy()), address(nftFarmStrategy)
-        );
+        assertEq(address(factory.nftFarmStrategy()), address(nftFarmStrategy));
         assertEq(address(factory.sickleFactory()), address(sickleFactory));
         assertEq(address(factory.rewardRouter()), address(rewardRouter));
     }

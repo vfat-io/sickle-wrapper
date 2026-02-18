@@ -18,11 +18,7 @@ interface IRewardRouter {
     /// @param user The end user who owns the position
     /// @param tokens The reward token addresses
     /// @param amounts The reward token amounts available in the wrapper
-    function onRewardsClaimed(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external;
+    function onRewardsClaimed(address user, address[] calldata tokens, uint256[] calldata amounts) external;
 
     /// @notice Called by SickleWrapper when compounding rewards.
     /// Same as `onRewardsClaimed` but the processed tokens must be sent back
@@ -31,9 +27,5 @@ interface IRewardRouter {
     /// @param user The end user who owns the position
     /// @param tokens The reward token addresses
     /// @param amounts The reward token amounts available in the wrapper
-    function onRewardsCompounded(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external;
+    function onRewardsCompounded(address user, address[] calldata tokens, uint256[] calldata amounts) external;
 }

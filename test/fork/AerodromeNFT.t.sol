@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import { SickleWrapper } from "../../src/SickleWrapper.sol";
-import { INonfungiblePositionManager } from
-    "../../src/interfaces/external/INonfungiblePositionManager.sol";
-import { IUniswapV3Pool } from
-    "../../src/interfaces/external/IUniswapV3Pool.sol";
+import {SickleWrapper} from "../../src/SickleWrapper.sol";
+import {INonfungiblePositionManager} from "../../src/interfaces/external/INonfungiblePositionManager.sol";
+import {IUniswapV3Pool} from "../../src/interfaces/external/IUniswapV3Pool.sol";
 import {
     NftPosition,
     NftDeposit,
@@ -19,25 +17,14 @@ import {
     NftMove,
     SimpleNftHarvest
 } from "../../src/structs/NftFarmStrategyStructs.sol";
-import { NftZapIn, NftZapOut } from "../../src/structs/NftZapStructs.sol";
-import {
-    NftAddLiquidity,
-    NftRemoveLiquidity,
-    Pool
-} from "../../src/structs/NftLiquidityStructs.sol";
-import { SwapParams } from "../../src/structs/SwapStructs.sol";
-import { NftSettings } from "../../src/structs/NftSettingsStructs.sol";
-import { Farm } from "../../src/structs/FarmStrategyStructs.sol";
+import {NftZapIn, NftZapOut} from "../../src/structs/NftZapStructs.sol";
+import {NftAddLiquidity, NftRemoveLiquidity, Pool} from "../../src/structs/NftLiquidityStructs.sol";
+import {SwapParams} from "../../src/structs/SwapStructs.sol";
+import {NftSettings} from "../../src/structs/NftSettingsStructs.sol";
+import {Farm} from "../../src/structs/FarmStrategyStructs.sol";
 
-import {
-    ForkTestBase,
-    Base,
-    ICLPool,
-    ICLGauge,
-    ISlipstreamNFTManager,
-    IPositionManager
-} from "./ForkTestBase.sol";
-import { MockExtraData } from "./MockSwapConnector.sol";
+import {ForkTestBase, Base, ICLPool, ICLGauge, ISlipstreamNFTManager, IPositionManager} from "./ForkTestBase.sol";
+import {MockExtraData} from "./MockSwapConnector.sol";
 
 /// @title AerodromeNFT Fork Tests
 /// @notice Full lifecycle tests for CL (NFT) positions through the wrapper.
@@ -58,33 +45,25 @@ contract AerodromeNFTForkTest is ForkTestBase {
     }
 
     function _farm() internal pure returns (Farm memory) {
-        return Farm({ stakingContract: GAUGE, poolIndex: 0 });
+        return Farm({stakingContract: GAUGE, poolIndex: 0});
     }
 
-    function _nftPosition(
-        uint256 tokenId
-    ) internal pure returns (NftPosition memory) {
+    function _nftPosition(uint256 tokenId) internal pure returns (NftPosition memory) {
         return NftPosition({
-            farm: Farm({ stakingContract: GAUGE, poolIndex: 0 }),
+            farm: Farm({stakingContract: GAUGE, poolIndex: 0}),
             nft: INonfungiblePositionManager(NFT_MANAGER),
             tokenId: tokenId
         });
     }
 
-    function _emptyNftSettings()
-        internal
-        pure
-        returns (NftSettings memory)
-    {
+    function _emptyNftSettings() internal pure returns (NftSettings memory) {
         NftSettings memory ns;
         return ns;
     }
 
     /// @dev Mint a CL NFT position to the given recipient by providing liquidity
     ///      around the current tick.
-    function _mintCLPosition(
-        address recipient
-    ) internal returns (uint256 tokenId) {
+    function _mintCLPosition(address recipient) internal returns (uint256 tokenId) {
         ICLPool pool = ICLPool(POOL);
         address token0 = pool.token0();
         address token1 = pool.token1();
@@ -92,10 +71,8 @@ contract AerodromeNFTForkTest is ForkTestBase {
         (, int24 currentTick,,,,) = pool.slot0();
 
         // Set a wide range around current tick
-        int24 tickLower =
-            _closestLowerTick(currentTick - 10 * tickSpacing, tickSpacing);
-        int24 tickUpper =
-            _closestUpperTick(currentTick + 10 * tickSpacing, tickSpacing);
+        int24 tickLower = _closestLowerTick(currentTick - 10 * tickSpacing, tickSpacing);
+        int24 tickUpper = _closestUpperTick(currentTick + 10 * tickSpacing, tickSpacing);
 
         // Deal tokens to this contract for minting
         uint256 amount0 = 1e18; // WETH
@@ -106,52 +83,40 @@ contract AerodromeNFTForkTest is ForkTestBase {
         IERC20(token0).approve(NFT_MANAGER, amount0);
         IERC20(token1).approve(NFT_MANAGER, amount1);
 
-        (tokenId,,,) = ISlipstreamNFTManager(NFT_MANAGER).mint(
-            ISlipstreamNFTManager.MintParams({
-                token0: token0,
-                token1: token1,
-                tickSpacing: tickSpacing,
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                amount0Desired: amount0,
-                amount1Desired: amount1,
-                amount0Min: 0,
-                amount1Min: 0,
-                recipient: recipient,
-                deadline: block.timestamp + 1 hours,
-                sqrtPriceX96: 0
-            })
-        );
+        (tokenId,,,) = ISlipstreamNFTManager(NFT_MANAGER)
+            .mint(
+                ISlipstreamNFTManager.MintParams({
+                    token0: token0,
+                    token1: token1,
+                    tickSpacing: tickSpacing,
+                    tickLower: tickLower,
+                    tickUpper: tickUpper,
+                    amount0Desired: amount0,
+                    amount1Desired: amount1,
+                    amount0Min: 0,
+                    amount1Min: 0,
+                    recipient: recipient,
+                    deadline: block.timestamp + 1 hours,
+                    sqrtPriceX96: 0
+                })
+            );
     }
 
     /// @dev Deposit an NFT via simpleDepositNft for use as setup in other tests
     function _depositNFT(uint256 tokenId) internal {
         vm.startPrank(user);
         IERC721(NFT_MANAGER).approve(address(wrapper), tokenId);
-        wrapper.simpleDepositNft(
-            _nftPosition(tokenId),
-            "",
-            _emptyNftSettings(),
-            address(0),
-            bytes32(0)
-        );
+        wrapper.simpleDepositNft(_nftPosition(tokenId), "", _emptyNftSettings(), address(0), bytes32(0));
         vm.stopPrank();
     }
 
     /// @dev Helper to get the liquidity of a position
-    function _getLiquidity(
-        uint256 tokenId
-    ) internal view returns (uint128 liquidity) {
-        (,,,,,,, liquidity,,,,) =
-            IPositionManager(NFT_MANAGER).positions(tokenId);
+    function _getLiquidity(uint256 tokenId) internal view returns (uint128 liquidity) {
+        (,,,,,,, liquidity,,,,) = IPositionManager(NFT_MANAGER).positions(tokenId);
     }
 
     /// @dev Build a simple NftHarvest with no swaps — just claim raw rewards
-    function _buildSimpleNftHarvest()
-        internal
-        pure
-        returns (NftHarvest memory)
-    {
+    function _buildSimpleNftHarvest() internal pure returns (NftHarvest memory) {
         address[] memory rewardTokens = new address[](1);
         rewardTokens[0] = REWARD_TOKEN;
 
@@ -162,12 +127,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         sweepTokens[0] = REWARD_TOKEN;
 
         return NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: outputTokens,
             sweepTokens: sweepTokens
@@ -175,10 +135,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
     }
 
     /// @dev Build NftWithdraw params to remove liquidity to underlying tokens
-    function _buildNftWithdraw(
-        uint256 tokenId,
-        uint128 liquidity
-    ) internal view returns (NftWithdraw memory) {
+    function _buildNftWithdraw(uint256 tokenId, uint128 liquidity) internal view returns (NftWithdraw memory) {
         ICLPool pool = ICLPool(POOL);
         address token0 = pool.token0();
         address token1 = pool.token1();
@@ -219,11 +176,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         _depositNFT(tokenId);
 
         // NFT should have moved from user → wrapper → Sickle → gauge
-        assertNotEq(
-            IERC721(NFT_MANAGER).ownerOf(tokenId),
-            user,
-            "user should not own NFT after deposit"
-        );
+        assertNotEq(IERC721(NFT_MANAGER).ownerOf(tokenId), user, "user should not own NFT after deposit");
 
         // Verify gauge has the NFT staked for the wrapper's Sickle
         ICLGauge gauge = ICLGauge(GAUGE);
@@ -237,8 +190,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // --- Harvest ---
         uint256 userAeroBefore = IERC20(REWARD_TOKEN).balanceOf(user);
-        uint256 feeRecipientAeroBefore =
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
+        uint256 feeRecipientAeroBefore = IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
 
         address[] memory rewardTokens = new address[](1);
         rewardTokens[0] = REWARD_TOKEN;
@@ -246,17 +198,11 @@ contract AerodromeNFTForkTest is ForkTestBase {
         vm.prank(user);
         wrapper.simpleHarvestNft(
             _nftPosition(tokenId),
-            SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            })
+            SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""})
         );
 
         uint256 userAeroAfter = IERC20(REWARD_TOKEN).balanceOf(user);
-        uint256 feeRecipientAeroAfter =
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
+        uint256 feeRecipientAeroAfter = IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
         uint256 userRewards = userAeroAfter - userAeroBefore;
         uint256 feeRewards = feeRecipientAeroAfter - feeRecipientAeroBefore;
 
@@ -265,22 +211,13 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Fee should be ~5% of total
         uint256 totalRewards = userRewards + feeRewards;
-        assertApproxEqRel(
-            feeRewards,
-            totalRewards * FEE_BPS / 10_000,
-            0.01e18,
-            "fee ~5%"
-        );
+        assertApproxEqRel(feeRewards, totalRewards * FEE_BPS / 10_000, 0.01e18, "fee ~5%");
 
         // --- Withdraw NFT ---
         vm.prank(user);
         wrapper.simpleWithdrawNft(_nftPosition(tokenId), "");
 
-        assertEq(
-            IERC721(NFT_MANAGER).ownerOf(tokenId),
-            user,
-            "user should own NFT after withdraw"
-        );
+        assertEq(IERC721(NFT_MANAGER).ownerOf(tokenId), user, "user should own NFT after withdraw");
     }
 
     // =====================================================================
@@ -301,31 +238,14 @@ contract AerodromeNFTForkTest is ForkTestBase {
         vm.prank(user);
         wrapper.simpleExitNft(
             _nftPosition(tokenId),
-            SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             ""
         );
 
         // User should have NFT back and rewards
-        assertEq(
-            IERC721(NFT_MANAGER).ownerOf(tokenId),
-            user,
-            "user should have NFT back"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(user),
-            0,
-            "user should have AERO rewards"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertEq(IERC721(NFT_MANAGER).ownerOf(tokenId), user, "user should have NFT back");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(user), 0, "user should have AERO rewards");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -347,12 +267,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         vm.expectRevert(SickleWrapper.NotUser.selector);
         wrapper.simpleHarvestNft(
             _nftPosition(tokenId),
-            SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            })
+            SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""})
         );
     }
 
@@ -370,9 +285,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         // Both should be staked
         address sickle = wrapper.sickleFactory().predict(address(wrapper));
         ICLGauge gauge = ICLGauge(GAUGE);
-        assertEq(
-            gauge.stakedLength(sickle), 2, "sickle should have 2 staked NFTs"
-        );
+        assertEq(gauge.stakedLength(sickle), 2, "sickle should have 2 staked NFTs");
 
         // Withdraw both
         vm.startPrank(user);
@@ -403,16 +316,8 @@ contract AerodromeNFTForkTest is ForkTestBase {
         wrapper.harvestNft(_nftPosition(tokenId), harvestParams);
 
         uint256 userAeroAfter = IERC20(REWARD_TOKEN).balanceOf(user);
-        assertGt(
-            userAeroAfter,
-            userAeroBefore,
-            "user should have AERO rewards after harvestNft()"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(userAeroAfter, userAeroBefore, "user should have AERO rewards after harvestNft()");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -428,25 +333,18 @@ contract AerodromeNFTForkTest is ForkTestBase {
         address token1 = pool.token1();
 
         uint128 liquidity = _getLiquidity(tokenId);
-        NftWithdraw memory withdrawParams =
-            _buildNftWithdraw(tokenId, liquidity);
+        NftWithdraw memory withdrawParams = _buildNftWithdraw(tokenId, liquidity);
 
         address[] memory sweepTokens = new address[](2);
         sweepTokens[0] = token0;
         sweepTokens[1] = token1;
 
         vm.prank(user);
-        wrapper.withdrawNft(
-            _nftPosition(tokenId), withdrawParams, sweepTokens
-        );
+        wrapper.withdrawNft(_nftPosition(tokenId), withdrawParams, sweepTokens);
 
         // User should have received underlying tokens
-        assertGt(
-            IERC20(token0).balanceOf(user), 0, "user should have WETH"
-        );
-        assertGt(
-            IERC20(token1).balanceOf(user), 0, "user should have AERO"
-        );
+        assertGt(IERC20(token0).balanceOf(user), 0, "user should have WETH");
+        assertGt(IERC20(token1).balanceOf(user), 0, "user should have AERO");
     }
 
     // =====================================================================
@@ -467,26 +365,19 @@ contract AerodromeNFTForkTest is ForkTestBase {
         NftHarvest memory harvestParams = _buildSimpleNftHarvest();
 
         uint128 liquidity = _getLiquidity(tokenId);
-        NftWithdraw memory withdrawParams =
-            _buildNftWithdraw(tokenId, liquidity);
+        NftWithdraw memory withdrawParams = _buildNftWithdraw(tokenId, liquidity);
 
         address[] memory sweepTokens = new address[](2);
         sweepTokens[0] = token0;
         sweepTokens[1] = token1;
 
         vm.prank(user);
-        wrapper.exitNft(
-            _nftPosition(tokenId), harvestParams, withdrawParams, sweepTokens
-        );
+        wrapper.exitNft(_nftPosition(tokenId), harvestParams, withdrawParams, sweepTokens);
 
         // User should have underlying tokens + AERO rewards
         assertGt(IERC20(token0).balanceOf(user), 0, "user should have WETH");
         assertGt(IERC20(token1).balanceOf(user), 0, "user should have AERO");
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee from harvest"
-        );
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee from harvest");
     }
 
     // =====================================================================
@@ -499,28 +390,17 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         _dealPoolTokens(user, amount0, amount1);
 
-        NftDeposit memory params =
-            _buildNftDeposit(amount0, amount1);
+        NftDeposit memory params = _buildNftDeposit(amount0, amount1);
 
         vm.startPrank(user);
         IERC20(ICLPool(POOL).token0()).approve(address(wrapper), amount0);
         IERC20(ICLPool(POOL).token1()).approve(address(wrapper), amount1);
-        wrapper.depositNft(
-            params,
-            _emptyNftSettings(),
-            _poolTokenArray(),
-            address(0),
-            bytes32(0)
-        );
+        wrapper.depositNft(params, _emptyNftSettings(), _poolTokenArray(), address(0), bytes32(0));
         vm.stopPrank();
 
         // NFT should be staked in gauge
         address sickle = wrapper.sickleFactory().predict(address(wrapper));
-        assertGt(
-            ICLGauge(GAUGE).stakedLength(sickle),
-            0,
-            "sickle should have staked NFT"
-        );
+        assertGt(ICLGauge(GAUGE).stakedLength(sickle), 0, "sickle should have staked NFT");
     }
 
     // =====================================================================
@@ -539,8 +419,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         uint128 liquidityBefore = _getLiquidity(tokenId);
         uint256 userAeroBefore = IERC20(REWARD_TOKEN).balanceOf(user);
 
-        NftIncrease memory increaseParams =
-            _buildNftIncrease(tokenId, 0.5e18, 500e18);
+        NftIncrease memory increaseParams = _buildNftIncrease(tokenId, 0.5e18, 500e18);
 
         _dealPoolTokens(user, 0.5e18, 500e18);
 
@@ -556,21 +435,9 @@ contract AerodromeNFTForkTest is ForkTestBase {
         );
         vm.stopPrank();
 
-        assertGt(
-            _getLiquidity(tokenId),
-            liquidityBefore,
-            "liquidity should increase"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(user),
-            userAeroBefore,
-            "user should have AERO from harvest"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(_getLiquidity(tokenId), liquidityBefore, "liquidity should increase");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(user), userAeroBefore, "user should have AERO from harvest");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -593,8 +460,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         uint128 totalLiquidity = _getLiquidity(tokenId);
         uint128 halfLiquidity = totalLiquidity / 2;
 
-        NftWithdraw memory withdrawParams =
-            _buildNftWithdraw(tokenId, halfLiquidity);
+        NftWithdraw memory withdrawParams = _buildNftWithdraw(tokenId, halfLiquidity);
         NftHarvest memory harvestParams = _buildSimpleNftHarvest();
 
         address[] memory sweepTokens = new address[](2);
@@ -614,11 +480,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Position should have less liquidity
         uint128 remainingLiquidity = _getLiquidity(tokenId);
-        assertLt(
-            remainingLiquidity,
-            totalLiquidity,
-            "liquidity should decrease"
-        );
+        assertLt(remainingLiquidity, totalLiquidity, "liquidity should decrease");
 
         // User should have underlying tokens
         assertGt(IERC20(token0).balanceOf(user), 0, "user should have WETH");
@@ -626,16 +488,8 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Rewards should have been routed
         uint256 userAeroAfter = IERC20(REWARD_TOKEN).balanceOf(user);
-        assertGt(
-            userAeroAfter,
-            userAeroBefore,
-            "user should have AERO from harvest"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(userAeroAfter, userAeroBefore, "user should have AERO from harvest");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -662,23 +516,16 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Withdraw full liquidity
         uint128 liquidity = _getLiquidity(tokenId);
-        NftWithdraw memory withdrawParams =
-            _buildNftWithdraw(tokenId, liquidity);
+        NftWithdraw memory withdrawParams = _buildNftWithdraw(tokenId, liquidity);
 
         // Re-deposit to a new (wider) tick range
         ICLPool pool = ICLPool(POOL);
         int24 tickSpacing = pool.tickSpacing();
         (, int24 currentTick,,,,) = pool.slot0();
-        int24 newTickLower = _closestLowerTick(
-            currentTick - 20 * tickSpacing, tickSpacing
-        );
-        int24 newTickUpper = _closestUpperTick(
-            currentTick + 20 * tickSpacing, tickSpacing
-        );
+        int24 newTickLower = _closestLowerTick(currentTick - 20 * tickSpacing, tickSpacing);
+        int24 newTickUpper = _closestUpperTick(currentTick + 20 * tickSpacing, tickSpacing);
 
-        NftIncrease memory increaseParams = _buildNftIncreaseWithTicks(
-            0, 0, 0, newTickLower, newTickUpper
-        );
+        NftIncrease memory increaseParams = _buildNftIncreaseWithTicks(0, 0, 0, newTickLower, newTickUpper);
 
         NftRebalance memory rebalanceParams = NftRebalance({
             pool: IUniswapV3Pool(POOL),
@@ -696,18 +543,10 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Verify a new position was staked
         address sickle = wrapper.sickleFactory().predict(address(wrapper));
-        assertGt(
-            ICLGauge(GAUGE).stakedLength(sickle),
-            0,
-            "sickle should have staked NFT after rebalance"
-        );
+        assertGt(ICLGauge(GAUGE).stakedLength(sickle), 0, "sickle should have staked NFT after rebalance");
 
         // Fee recipient should have received a WETH fee (harvest swaps AERO→WETH)
-        assertGt(
-            IERC20(ICLPool(POOL).token0()).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have WETH fee"
-        );
+        assertGt(IERC20(ICLPool(POOL).token0()).balanceOf(feeRecipient), 0, "fee recipient should have WETH fee");
     }
 
     // =====================================================================
@@ -726,23 +565,16 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Withdraw full liquidity
         uint128 liquidity = _getLiquidity(tokenId);
-        NftWithdraw memory withdrawParams =
-            _buildNftWithdraw(tokenId, liquidity);
+        NftWithdraw memory withdrawParams = _buildNftWithdraw(tokenId, liquidity);
 
         // Re-deposit into a new position (wider tick range)
         ICLPool pool = ICLPool(POOL);
         int24 tickSpacing = pool.tickSpacing();
         (, int24 currentTick,,,,) = pool.slot0();
-        int24 newTickLower = _closestLowerTick(
-            currentTick - 20 * tickSpacing, tickSpacing
-        );
-        int24 newTickUpper = _closestUpperTick(
-            currentTick + 20 * tickSpacing, tickSpacing
-        );
+        int24 newTickLower = _closestLowerTick(currentTick - 20 * tickSpacing, tickSpacing);
+        int24 newTickUpper = _closestUpperTick(currentTick + 20 * tickSpacing, tickSpacing);
 
-        NftDeposit memory depositParams = _buildNftDepositWithTicks(
-            newTickLower, newTickUpper
-        );
+        NftDeposit memory depositParams = _buildNftDepositWithTicks(newTickLower, newTickUpper);
 
         NftMove memory moveParams = NftMove({
             pool: IUniswapV3Pool(POOL),
@@ -761,25 +593,13 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         // Verify a new position was staked in the same gauge
         address sickle = wrapper.sickleFactory().predict(address(wrapper));
-        assertGt(
-            ICLGauge(GAUGE).stakedLength(sickle),
-            0,
-            "sickle should have staked NFT after move"
-        );
+        assertGt(ICLGauge(GAUGE).stakedLength(sickle), 0, "sickle should have staked NFT after move");
 
         // Fee recipient should have AERO fee (no swap in harvest)
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have AERO fee"
-        );
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have AERO fee");
 
         // User should have received rewards minus fee
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(user),
-            0,
-            "user should have AERO rewards"
-        );
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(user), 0, "user should have AERO rewards");
     }
 
     // =====================================================================
@@ -794,11 +614,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         vm.prank(user);
         wrapper.rescueNft(NFT_MANAGER, tokenId);
 
-        assertEq(
-            IERC721(NFT_MANAGER).ownerOf(tokenId),
-            user,
-            "user should have rescued NFT"
-        );
+        assertEq(IERC721(NFT_MANAGER).ownerOf(tokenId), user, "user should have rescued NFT");
     }
 
     function test_rescueNft_onlyUser() public {
@@ -821,11 +637,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         arr[1] = pool.token1();
     }
 
-    function _dealPoolTokens(
-        address to,
-        uint256 amount0,
-        uint256 amount1
-    ) internal {
+    function _dealPoolTokens(address to, uint256 amount0, uint256 amount1) internal {
         ICLPool pool = ICLPool(POOL);
         deal(pool.token0(), to, amount0);
         deal(pool.token1(), to, amount1);
@@ -835,11 +647,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
     ///      sweepTokens = [WETH] (the OUTPUT of the swap) so the strategy
     ///      sweeps WETH from Sickle to wrapper, and the wrapper routes it
     ///      through the RewardRouter.
-    function _buildNftHarvestWithSwap()
-        internal
-        view
-        returns (NftHarvest memory)
-    {
+    function _buildNftHarvestWithSwap() internal view returns (NftHarvest memory) {
         address[] memory rewardTokens = new address[](1);
         rewardTokens[0] = REWARD_TOKEN;
 
@@ -855,7 +663,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
             minAmountOut: 0.5e18, // deal 0.5 WETH
             tokenIn: REWARD_TOKEN,
             tokenOut: weth,
-            extraData: abi.encode(MockExtraData({ tokenOut: weth }))
+            extraData: abi.encode(MockExtraData({tokenOut: weth}))
         });
 
         address[] memory outputTokens = new address[](1);
@@ -866,12 +674,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
         sweepTokens[0] = weth;
 
         return NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: swaps,
             outputTokens: outputTokens,
             sweepTokens: sweepTokens
@@ -903,11 +706,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
                 addLiquidityParams: NftAddLiquidity({
                     nft: INonfungiblePositionManager(NFT_MANAGER),
                     tokenId: tokenId,
-                    pool: Pool({
-                        token0: pool.token0(),
-                        token1: pool.token1(),
-                        fee: uint24(tickSpacing)
-                    }),
+                    pool: Pool({token0: pool.token0(), token1: pool.token1(), fee: uint24(tickSpacing)}),
                     tickLower: tickLower,
                     tickUpper: tickUpper,
                     amount0Desired: amount0,
@@ -923,10 +722,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
     /// @dev Build NftDeposit for move: re-deposit to new tick range.
     /// No tokensIn — the Sickle already has tokens from the withdraw step.
-    function _buildNftDepositWithTicks(
-        int24 tickLower,
-        int24 tickUpper
-    ) internal view returns (NftDeposit memory) {
+    function _buildNftDepositWithTicks(int24 tickLower, int24 tickUpper) internal view returns (NftDeposit memory) {
         ICLPool pool = ICLPool(POOL);
         int24 tickSpacing = pool.tickSpacing();
 
@@ -941,11 +737,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
                     addLiquidityParams: NftAddLiquidity({
                         nft: INonfungiblePositionManager(NFT_MANAGER),
                         tokenId: 0, // new mint
-                        pool: Pool({
-                            token0: pool.token0(),
-                            token1: pool.token1(),
-                            fee: uint24(tickSpacing)
-                        }),
+                        pool: Pool({token0: pool.token0(), token1: pool.token1(), fee: uint24(tickSpacing)}),
                         tickLower: tickLower,
                         tickUpper: tickUpper,
                         amount0Desired: 0,
@@ -961,10 +753,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
     }
 
     /// @dev Build NftDeposit params for a new mint from two tokens
-    function _buildNftDeposit(
-        uint256 amount0,
-        uint256 amount1
-    ) internal view returns (NftDeposit memory) {
+    function _buildNftDeposit(uint256 amount0, uint256 amount1) internal view returns (NftDeposit memory) {
         address[] memory tokensIn = _poolTokenArray();
 
         uint256[] memory amountsIn = new uint256[](2);
@@ -978,8 +767,7 @@ contract AerodromeNFTForkTest is ForkTestBase {
                 tokensIn: tokensIn,
                 amountsIn: amountsIn,
                 zap: NftZapIn({
-                    swaps: new SwapParams[](0),
-                    addLiquidityParams: _buildAddLiquidity(0, amount0, amount1)
+                    swaps: new SwapParams[](0), addLiquidityParams: _buildAddLiquidity(0, amount0, amount1)
                 }),
                 extraData: ""
             })
@@ -987,11 +775,11 @@ contract AerodromeNFTForkTest is ForkTestBase {
     }
 
     /// @dev Build NftIncrease params for an existing position
-    function _buildNftIncrease(
-        uint256 tokenId,
-        uint256 amount0,
-        uint256 amount1
-    ) internal view returns (NftIncrease memory) {
+    function _buildNftIncrease(uint256 tokenId, uint256 amount0, uint256 amount1)
+        internal
+        view
+        returns (NftIncrease memory)
+    {
         address[] memory tokensIn = _poolTokenArray();
 
         uint256[] memory amountsIn = new uint256[](2);
@@ -1002,21 +790,18 @@ contract AerodromeNFTForkTest is ForkTestBase {
             tokensIn: tokensIn,
             amountsIn: amountsIn,
             zap: NftZapIn({
-                swaps: new SwapParams[](0),
-                addLiquidityParams: _buildAddLiquidity(
-                    tokenId, amount0, amount1
-                )
+                swaps: new SwapParams[](0), addLiquidityParams: _buildAddLiquidity(tokenId, amount0, amount1)
             }),
             extraData: ""
         });
     }
 
     /// @dev Build NftAddLiquidity params (shared by deposit and increase)
-    function _buildAddLiquidity(
-        uint256 tokenId,
-        uint256 amount0,
-        uint256 amount1
-    ) internal view returns (NftAddLiquidity memory) {
+    function _buildAddLiquidity(uint256 tokenId, uint256 amount0, uint256 amount1)
+        internal
+        view
+        returns (NftAddLiquidity memory)
+    {
         ICLPool pool = ICLPool(POOL);
         int24 tickSpacing = pool.tickSpacing();
         int24 tickLower;
@@ -1024,25 +809,16 @@ contract AerodromeNFTForkTest is ForkTestBase {
 
         if (tokenId == 0) {
             (, int24 currentTick,,,,) = pool.slot0();
-            tickLower = _closestLowerTick(
-                currentTick - 10 * tickSpacing, tickSpacing
-            );
-            tickUpper = _closestUpperTick(
-                currentTick + 10 * tickSpacing, tickSpacing
-            );
+            tickLower = _closestLowerTick(currentTick - 10 * tickSpacing, tickSpacing);
+            tickUpper = _closestUpperTick(currentTick + 10 * tickSpacing, tickSpacing);
         } else {
-            (,,,,, tickLower, tickUpper,,,,,) =
-                IPositionManager(NFT_MANAGER).positions(tokenId);
+            (,,,,, tickLower, tickUpper,,,,,) = IPositionManager(NFT_MANAGER).positions(tokenId);
         }
 
         return NftAddLiquidity({
             nft: INonfungiblePositionManager(NFT_MANAGER),
             tokenId: tokenId,
-            pool: Pool({
-                token0: pool.token0(),
-                token1: pool.token1(),
-                fee: uint24(tickSpacing)
-            }),
+            pool: Pool({token0: pool.token0(), token1: pool.token1(), fee: uint24(tickSpacing)}),
             tickLower: tickLower,
             tickUpper: tickUpper,
             amount0Desired: amount0,

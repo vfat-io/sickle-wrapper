@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { IERC721Receiver } from
-    "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import { INftFarmStrategy } from "../../src/interfaces/INftFarmStrategy.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {INftFarmStrategy} from "../../src/interfaces/INftFarmStrategy.sol";
 import {
     NftPosition,
     NftDeposit,
@@ -15,9 +14,9 @@ import {
     NftMove,
     SimpleNftHarvest
 } from "../../src/structs/NftFarmStrategyStructs.sol";
-import { NftSettings } from "../../src/structs/NftSettingsStructs.sol";
+import {NftSettings} from "../../src/structs/NftSettingsStructs.sol";
 
-import { MockERC20 } from "./MockERC20.sol";
+import {MockERC20} from "./MockERC20.sol";
 
 /// @dev Mock NftFarmStrategy for testing.
 ///
@@ -45,10 +44,7 @@ contract MockNftFarmStrategy is INftFarmStrategy, IERC721Receiver {
     uint256 public rebalanceCalls;
     uint256 public moveCalls;
 
-    function setHarvestRewards(
-        address[] memory tokens,
-        uint256[] memory amounts
-    ) external {
+    function setHarvestRewards(address[] memory tokens, uint256[] memory amounts) external {
         harvestRewardTokens = tokens;
         harvestRewardAmounts = amounts;
     }
@@ -58,62 +54,44 @@ contract MockNftFarmStrategy is INftFarmStrategy, IERC721Receiver {
         withdrawAmount = amount;
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata)
-        external
-        pure
-        override
-        returns (bytes4)
-    {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
     // --- Strategy functions ---
 
-    function deposit(
-        NftDeposit calldata,
-        NftSettings calldata,
-        address[] calldata,
-        address,
-        bytes32
-    ) external payable override {
+    function deposit(NftDeposit calldata, NftSettings calldata, address[] calldata, address, bytes32)
+        external
+        payable
+        override
+    {
         depositCalls++;
     }
 
-    function increase(
-        NftPosition calldata,
-        NftHarvest calldata,
-        NftIncrease calldata,
-        bool inPlace,
-        address[] calldata
-    ) external payable override {
+    function increase(NftPosition calldata, NftHarvest calldata, NftIncrease calldata, bool inPlace, address[] calldata)
+        external
+        payable
+        override
+    {
         increaseCalls++;
         // When !inPlace, the real strategy harvests first
         if (!inPlace) _mintRewards();
     }
 
-    function harvest(
-        NftPosition calldata,
-        NftHarvest calldata
-    ) external override {
+    function harvest(NftPosition calldata, NftHarvest calldata) external override {
         harvestCalls++;
         _mintRewards();
     }
 
-    function simpleHarvest(
-        NftPosition calldata,
-        SimpleNftHarvest calldata
-    ) external override {
+    function simpleHarvest(NftPosition calldata, SimpleNftHarvest calldata) external override {
         simpleHarvestCalls++;
         _mintRewards();
     }
 
-    function simpleDeposit(
-        NftPosition calldata position,
-        bytes calldata,
-        NftSettings calldata,
-        address,
-        bytes32
-    ) external override {
+    function simpleDeposit(NftPosition calldata position, bytes calldata, NftSettings calldata, address, bytes32)
+        external
+        override
+    {
         simpleDepositCalls++;
         // Pull NFT from wrapper (wrapper approved sickle, but for simpleDeposit
         // the wrapper calls approve directly to _sickleAddress(). In the real
@@ -124,35 +102,23 @@ contract MockNftFarmStrategy is INftFarmStrategy, IERC721Receiver {
         // The NFT transfer is tested at the wrapper level.
     }
 
-    function simpleWithdraw(
-        NftPosition calldata position,
-        bytes calldata
-    ) external override {
+    function simpleWithdraw(NftPosition calldata position, bytes calldata) external override {
         simpleWithdrawCalls++;
         // Send NFT back to wrapper (simulates Sickle returning NFT to owner)
-        IERC721(address(position.nft)).safeTransferFrom(
-            address(this), msg.sender, position.tokenId
-        );
+        IERC721(address(position.nft)).safeTransferFrom(address(this), msg.sender, position.tokenId);
     }
 
-    function withdraw(
-        NftPosition calldata,
-        NftWithdraw calldata,
-        address[] calldata
-    ) external override {
+    function withdraw(NftPosition calldata, NftWithdraw calldata, address[] calldata) external override {
         withdrawCalls++;
         if (withdrawAmount > 0) {
             MockERC20(withdrawToken).mint(msg.sender, withdrawAmount);
         }
     }
 
-    function decrease(
-        NftPosition calldata,
-        NftHarvest calldata,
-        NftWithdraw calldata,
-        bool inPlace,
-        address[] calldata
-    ) external override {
+    function decrease(NftPosition calldata, NftHarvest calldata, NftWithdraw calldata, bool inPlace, address[] calldata)
+        external
+        override
+    {
         decreaseCalls++;
         if (!inPlace) _mintRewards();
         if (withdrawAmount > 0) {
@@ -160,28 +126,19 @@ contract MockNftFarmStrategy is INftFarmStrategy, IERC721Receiver {
         }
     }
 
-    function rebalance(
-        NftRebalance calldata,
-        address[] calldata
-    ) external override {
+    function rebalance(NftRebalance calldata, address[] calldata) external override {
         rebalanceCalls++;
         _mintRewards();
     }
 
-    function move(
-        NftMove calldata,
-        NftSettings calldata,
-        address[] calldata
-    ) external override {
+    function move(NftMove calldata, NftSettings calldata, address[] calldata) external override {
         moveCalls++;
         _mintRewards();
     }
 
     function _mintRewards() private {
         for (uint256 i; i < harvestRewardTokens.length; i++) {
-            MockERC20(harvestRewardTokens[i]).mint(
-                msg.sender, harvestRewardAmounts[i]
-            );
+            MockERC20(harvestRewardTokens[i]).mint(msg.sender, harvestRewardAmounts[i]);
         }
     }
 }

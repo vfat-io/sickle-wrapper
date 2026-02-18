@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { SickleWrapper } from "../../src/SickleWrapper.sol";
+import {SickleWrapper} from "../../src/SickleWrapper.sol";
 import {
     Farm,
     DepositParams,
@@ -13,16 +13,13 @@ import {
     SimpleHarvestParams,
     SimpleWithdrawParams
 } from "../../src/structs/FarmStrategyStructs.sol";
-import { ZapIn, ZapOut } from "../../src/structs/ZapStructs.sol";
-import {
-    AddLiquidityParams,
-    RemoveLiquidityParams
-} from "../../src/structs/LiquidityStructs.sol";
-import { SwapParams } from "../../src/structs/SwapStructs.sol";
-import { PositionSettings } from "../../src/structs/PositionSettingsStructs.sol";
+import {ZapIn, ZapOut} from "../../src/structs/ZapStructs.sol";
+import {AddLiquidityParams, RemoveLiquidityParams} from "../../src/structs/LiquidityStructs.sol";
+import {SwapParams} from "../../src/structs/SwapStructs.sol";
+import {PositionSettings} from "../../src/structs/PositionSettingsStructs.sol";
 
-import { ForkTestBase, Base, IVAMMPool, IVAMMGauge } from "./ForkTestBase.sol";
-import { MockExtraData } from "./MockSwapConnector.sol";
+import {ForkTestBase, Base, IVAMMPool, IVAMMGauge} from "./ForkTestBase.sol";
+import {MockExtraData} from "./MockSwapConnector.sol";
 
 /// @title AerodromeERC20 Fork Tests
 /// @notice Full lifecycle tests for ERC20 (VAMM) positions through the wrapper.
@@ -44,7 +41,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
     }
 
     function _farm() internal pure returns (Farm memory) {
-        return Farm({ stakingContract: GAUGE, poolIndex: 0 });
+        return Farm({stakingContract: GAUGE, poolIndex: 0});
     }
 
     /// @dev Deposit LP tokens via simpleDeposit for use as setup in other tests.
@@ -56,12 +53,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.startPrank(user);
         IERC20(LP_TOKEN).approve(address(wrapper), amount);
         wrapper.simpleDeposit(
-            SimpleDepositParams({
-                farm: _farm(),
-                lpToken: LP_TOKEN,
-                amountIn: amount,
-                extraData: ""
-            }),
+            SimpleDepositParams({farm: _farm(), lpToken: LP_TOKEN, amountIn: amount, extraData: ""}),
             _emptyPositionSettings(),
             address(0),
             bytes32(0)
@@ -72,10 +64,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
     /// @dev Deposit via deposit() with real tokens (WETH + USDC) which mints
     /// real LP tokens through the pool, keeping totalSupply in sync.
     /// Required for tests that later call removeLiquidity.
-    function _depositTwoToken(
-        uint256 amount0,
-        uint256 amount1
-    ) internal {
+    function _depositTwoToken(uint256 amount0, uint256 amount1) internal {
         IVAMMPool pool = IVAMMPool(LP_TOKEN);
         address token0 = pool.token0();
         address token1 = pool.token1();
@@ -120,13 +109,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.startPrank(user);
         IERC20(token0).approve(address(wrapper), amount0);
         IERC20(token1).approve(address(wrapper), amount1);
-        wrapper.deposit(
-            params,
-            _emptyPositionSettings(),
-            sweepTokens,
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit(params, _emptyPositionSettings(), sweepTokens, address(0), bytes32(0));
         vm.stopPrank();
     }
 
@@ -152,12 +135,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         IERC20(LP_TOKEN).approve(address(wrapper), depositAmount);
 
         wrapper.simpleDeposit(
-            SimpleDepositParams({
-                farm: _farm(),
-                lpToken: LP_TOKEN,
-                amountIn: depositAmount,
-                extraData: ""
-            }),
+            SimpleDepositParams({farm: _farm(), lpToken: LP_TOKEN, amountIn: depositAmount, extraData: ""}),
             _emptyPositionSettings(),
             address(0),
             bytes32(0)
@@ -166,11 +144,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
 
         // LP tokens should have been deposited into the gauge via Sickle
         assertEq(IERC20(LP_TOKEN).balanceOf(user), 0, "user LP after deposit");
-        assertEq(
-            IERC20(LP_TOKEN).balanceOf(address(wrapper)),
-            0,
-            "wrapper LP after deposit"
-        );
+        assertEq(IERC20(LP_TOKEN).balanceOf(address(wrapper)), 0, "wrapper LP after deposit");
 
         // --- Warp time to accrue rewards ---
         vm.warp(block.timestamp + 7 days);
@@ -178,21 +152,16 @@ contract AerodromeERC20ForkTest is ForkTestBase {
 
         // --- Harvest ---
         uint256 userAeroBefore = IERC20(REWARD_TOKEN).balanceOf(user);
-        uint256 feeRecipientAeroBefore =
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
+        uint256 feeRecipientAeroBefore = IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
 
         address[] memory rewardTokens = new address[](1);
         rewardTokens[0] = REWARD_TOKEN;
 
         vm.prank(user);
-        wrapper.simpleHarvest(
-            _farm(),
-            SimpleHarvestParams({ rewardTokens: rewardTokens, extraData: "" })
-        );
+        wrapper.simpleHarvest(_farm(), SimpleHarvestParams({rewardTokens: rewardTokens, extraData: ""}));
 
         uint256 userAeroAfter = IERC20(REWARD_TOKEN).balanceOf(user);
-        uint256 feeRecipientAeroAfter =
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
+        uint256 feeRecipientAeroAfter = IERC20(REWARD_TOKEN).balanceOf(feeRecipient);
         uint256 userRewards = userAeroAfter - userAeroBefore;
         uint256 feeRewards = feeRecipientAeroAfter - feeRecipientAeroBefore;
 
@@ -201,29 +170,18 @@ contract AerodromeERC20ForkTest is ForkTestBase {
 
         // Fee should be ~5% of total
         uint256 totalRewards = userRewards + feeRewards;
-        assertApproxEqRel(
-            feeRewards, totalRewards * FEE_BPS / 10_000, 0.01e18, "fee ~5%"
-        );
+        assertApproxEqRel(feeRewards, totalRewards * FEE_BPS / 10_000, 0.01e18, "fee ~5%");
 
         // --- Withdraw ---
         uint256 userLpBefore = IERC20(LP_TOKEN).balanceOf(user);
 
         vm.prank(user);
         wrapper.simpleWithdraw(
-            _farm(),
-            SimpleWithdrawParams({
-                lpToken: LP_TOKEN,
-                amountOut: depositAmount,
-                extraData: ""
-            })
+            _farm(), SimpleWithdrawParams({lpToken: LP_TOKEN, amountOut: depositAmount, extraData: ""})
         );
 
         uint256 userLpAfter = IERC20(LP_TOKEN).balanceOf(user);
-        assertGt(
-            userLpAfter,
-            userLpBefore,
-            "user should have LP tokens back after withdraw"
-        );
+        assertGt(userLpAfter, userLpBefore, "user should have LP tokens back after withdraw");
     }
 
     // =====================================================================
@@ -246,28 +204,14 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.prank(user);
         wrapper.simpleExit(
             _farm(),
-            SimpleHarvestParams({ rewardTokens: rewardTokens, extraData: "" }),
-            SimpleWithdrawParams({
-                lpToken: LP_TOKEN,
-                amountOut: depositAmount,
-                extraData: ""
-            })
+            SimpleHarvestParams({rewardTokens: rewardTokens, extraData: ""}),
+            SimpleWithdrawParams({lpToken: LP_TOKEN, amountOut: depositAmount, extraData: ""})
         );
 
         // User should have both LP and rewards
-        assertGt(
-            IERC20(LP_TOKEN).balanceOf(user), 0, "user should have LP back"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(user),
-            0,
-            "user should have AERO rewards"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(IERC20(LP_TOKEN).balanceOf(user), 0, "user should have LP back");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(user), 0, "user should have AERO rewards");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -288,10 +232,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert(SickleWrapper.NotUser.selector);
-        wrapper.simpleHarvest(
-            _farm(),
-            SimpleHarvestParams({ rewardTokens: rewardTokens, extraData: "" })
-        );
+        wrapper.simpleHarvest(_farm(), SimpleHarvestParams({rewardTokens: rewardTokens, extraData: ""}));
     }
 
     // =====================================================================
@@ -310,24 +251,14 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.startPrank(user);
         IERC20(LP_TOKEN).approve(address(wrapper), secondDeposit);
         wrapper.simpleIncrease(
-            SimpleDepositParams({
-                farm: _farm(),
-                lpToken: LP_TOKEN,
-                amountIn: secondDeposit,
-                extraData: ""
-            })
+            SimpleDepositParams({farm: _farm(), lpToken: LP_TOKEN, amountIn: secondDeposit, extraData: ""})
         );
         vm.stopPrank();
 
         // Withdraw full amount
         vm.prank(user);
         wrapper.simpleWithdraw(
-            _farm(),
-            SimpleWithdrawParams({
-                lpToken: LP_TOKEN,
-                amountOut: firstDeposit + secondDeposit,
-                extraData: ""
-            })
+            _farm(), SimpleWithdrawParams({lpToken: LP_TOKEN, amountOut: firstDeposit + secondDeposit, extraData: ""})
         );
 
         assertApproxEqAbs(
@@ -397,13 +328,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.startPrank(user);
         IERC20(token0).approve(address(wrapper), amount0);
         IERC20(token1).approve(address(wrapper), amount1);
-        wrapper.deposit(
-            params,
-            _emptyPositionSettings(),
-            sweepTokens,
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit(params, _emptyPositionSettings(), sweepTokens, address(0), bytes32(0));
         vm.stopPrank();
 
         // LP should be staked in gauge
@@ -412,11 +337,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         assertGt(staked, 0, "sickle should have LP staked in gauge");
 
         // Wrapper should not hold any tokens
-        assertEq(
-            IERC20(LP_TOKEN).balanceOf(address(wrapper)),
-            0,
-            "wrapper LP should be 0"
-        );
+        assertEq(IERC20(LP_TOKEN).balanceOf(address(wrapper)), 0, "wrapper LP should be 0");
     }
 
     // =====================================================================
@@ -485,11 +406,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.stopPrank();
 
         uint256 stakedAfter = IVAMMGauge(GAUGE).balanceOf(sickle);
-        assertGt(
-            stakedAfter,
-            stakedBefore,
-            "staked LP should increase"
-        );
+        assertGt(stakedAfter, stakedBefore, "staked LP should increase");
     }
 
     // =====================================================================
@@ -509,11 +426,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         address[] memory sweepTokens = new address[](1);
         sweepTokens[0] = REWARD_TOKEN;
 
-        HarvestParams memory params = HarvestParams({
-            swaps: new SwapParams[](0),
-            extraData: "",
-            tokensOut: tokensOut
-        });
+        HarvestParams memory params = HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: tokensOut});
 
         uint256 userAeroBefore = IERC20(REWARD_TOKEN).balanceOf(user);
 
@@ -521,16 +434,8 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         wrapper.harvest(_farm(), params, sweepTokens);
 
         uint256 userAeroAfter = IERC20(REWARD_TOKEN).balanceOf(user);
-        assertGt(
-            userAeroAfter,
-            userAeroBefore,
-            "user should have AERO rewards after harvest()"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(userAeroAfter, userAeroBefore, "user should have AERO rewards after harvest()");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -552,16 +457,8 @@ contract AerodromeERC20ForkTest is ForkTestBase {
 
         IVAMMPool pool = IVAMMPool(LP_TOKEN);
         // User should have received underlying tokens (WETH + USDC)
-        assertGt(
-            IERC20(pool.token0()).balanceOf(user),
-            0,
-            "user should have WETH after withdraw"
-        );
-        assertGt(
-            IERC20(pool.token1()).balanceOf(user),
-            0,
-            "user should have USDC after withdraw"
-        );
+        assertGt(IERC20(pool.token0()).balanceOf(user), 0, "user should have WETH after withdraw");
+        assertGt(IERC20(pool.token1()).balanceOf(user), 0, "user should have USDC after withdraw");
     }
 
     // =====================================================================
@@ -583,32 +480,14 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         address[] memory withdrawSweepTokens = _tokenPairArray();
 
         vm.prank(user);
-        wrapper.exit(
-            _farm(),
-            harvestParams,
-            harvestSweepTokens,
-            withdrawParams,
-            withdrawSweepTokens
-        );
+        wrapper.exit(_farm(), harvestParams, harvestSweepTokens, withdrawParams, withdrawSweepTokens);
 
         IVAMMPool pool = IVAMMPool(LP_TOKEN);
         // User should have underlying tokens + AERO rewards
-        assertGt(
-            IERC20(pool.token0()).balanceOf(user), 0, "user should have WETH"
-        );
-        assertGt(
-            IERC20(pool.token1()).balanceOf(user), 0, "user should have USDC"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(user),
-            0,
-            "user should have AERO rewards"
-        );
-        assertGt(
-            IERC20(REWARD_TOKEN).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have fee"
-        );
+        assertGt(IERC20(pool.token0()).balanceOf(user), 0, "user should have WETH");
+        assertGt(IERC20(pool.token1()).balanceOf(user), 0, "user should have USDC");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(user), 0, "user should have AERO rewards");
+        assertGt(IERC20(REWARD_TOKEN).balanceOf(feeRecipient), 0, "fee recipient should have fee");
     }
 
     // =====================================================================
@@ -636,31 +515,18 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         // The wrapper's WETH balance after harvest+route is reduced by both
         // the Sickle protocol fee (~0.9%) and our RewardRouter fee (5%).
         // Use a conservative amount that's safely below the actual balance.
-        DepositParams memory depositParams =
-            _buildCompoundDepositParams(0.45e18);
+        DepositParams memory depositParams = _buildCompoundDepositParams(0.45e18);
         address[] memory depositSweepTokens = _tokenPairArray();
 
         vm.prank(user);
-        wrapper.compound(
-            _farm(),
-            harvestParams,
-            harvestSweepTokens,
-            depositParams,
-            depositSweepTokens
-        );
+        wrapper.compound(_farm(), harvestParams, harvestSweepTokens, depositParams, depositSweepTokens);
 
         // Staked LP should have increased from the compounded rewards
         uint256 stakedAfter = _stakedBalance();
-        assertGt(
-            stakedAfter, stakedBefore, "staked LP should increase after compound"
-        );
+        assertGt(stakedAfter, stakedBefore, "staked LP should increase after compound");
 
         // Fee recipient should have received a WETH fee (harvest swaps AERO→WETH)
-        assertGt(
-            IERC20(Base.WETH).balanceOf(feeRecipient),
-            0,
-            "fee recipient should have WETH fee"
-        );
+        assertGt(IERC20(Base.WETH).balanceOf(feeRecipient), 0, "fee recipient should have WETH fee");
     }
 
     // =====================================================================
@@ -677,16 +543,8 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         vm.prank(user);
         wrapper.rescueToken(Base.WETH);
 
-        assertEq(
-            IERC20(Base.WETH).balanceOf(address(wrapper)),
-            0,
-            "wrapper should have 0 after rescue"
-        );
-        assertEq(
-            IERC20(Base.WETH).balanceOf(user),
-            amount,
-            "user should have rescued tokens"
-        );
+        assertEq(IERC20(Base.WETH).balanceOf(address(wrapper)), 0, "wrapper should have 0 after rescue");
+        assertEq(IERC20(Base.WETH).balanceOf(user), amount, "user should have rescued tokens");
     }
 
     function test_rescueETH() public {
@@ -725,11 +583,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
     // Helpers
     // =====================================================================
 
-    function _emptyPositionSettings()
-        internal
-        pure
-        returns (PositionSettings memory)
-    {
+    function _emptyPositionSettings() internal pure returns (PositionSettings memory) {
         PositionSettings memory ps;
         return ps;
     }
@@ -746,28 +600,16 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         arr[1] = pool.token1();
     }
 
-    function _buildHarvestParams()
-        internal
-        pure
-        returns (HarvestParams memory)
-    {
+    function _buildHarvestParams() internal pure returns (HarvestParams memory) {
         address[] memory tokensOut = new address[](1);
         tokensOut[0] = REWARD_TOKEN;
 
-        return HarvestParams({
-            swaps: new SwapParams[](0),
-            extraData: "",
-            tokensOut: tokensOut
-        });
+        return HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: tokensOut});
     }
 
     /// @dev Build HarvestParams that swap AERO → WETH via the mock router.
     /// The mock router just deal()s the output tokens.
-    function _buildHarvestParamsWithSwap()
-        internal
-        view
-        returns (HarvestParams memory)
-    {
+    function _buildHarvestParamsWithSwap() internal view returns (HarvestParams memory) {
         address[] memory tokensOut = new address[](1);
         tokensOut[0] = Base.WETH;
 
@@ -780,23 +622,17 @@ contract AerodromeERC20ForkTest is ForkTestBase {
             minAmountOut: 0.5e18, // mock will deal this much WETH
             tokenIn: REWARD_TOKEN,
             tokenOut: Base.WETH,
-            extraData: abi.encode(MockExtraData({ tokenOut: Base.WETH }))
+            extraData: abi.encode(MockExtraData({tokenOut: Base.WETH}))
         });
 
-        return HarvestParams({
-            swaps: swaps,
-            extraData: "",
-            tokensOut: tokensOut
-        });
+        return HarvestParams({swaps: swaps, extraData: "", tokensOut: tokensOut});
     }
 
     /// @dev Build DepositParams for re-depositing WETH into the VAMM pool.
     /// Used in compound: the router returns WETH, which must be split into
     /// both pool tokens (volatile AMMs require both). Includes a mock swap
     /// WETH → USDC for half the amount.
-    function _buildCompoundDepositParams(
-        uint256 wethAmount
-    ) internal view returns (DepositParams memory) {
+    function _buildCompoundDepositParams(uint256 wethAmount) internal view returns (DepositParams memory) {
         IVAMMPool pool = IVAMMPool(LP_TOKEN);
         address token0 = pool.token0();
         address token1 = pool.token1();
@@ -825,7 +661,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
             minAmountOut: usdcOut,
             tokenIn: Base.WETH,
             tokenOut: Base.USDC,
-            extraData: abi.encode(MockExtraData({ tokenOut: Base.USDC }))
+            extraData: abi.encode(MockExtraData({tokenOut: Base.USDC}))
         });
 
         return DepositParams({
@@ -847,9 +683,7 @@ contract AerodromeERC20ForkTest is ForkTestBase {
         });
     }
 
-    function _buildWithdrawParams(
-        uint256 lpAmount
-    ) internal view returns (WithdrawParams memory) {
+    function _buildWithdrawParams(uint256 lpAmount) internal view returns (WithdrawParams memory) {
         IVAMMPool pool = IVAMMPool(LP_TOKEN);
         address token0 = pool.token0();
         address token1 = pool.token1();

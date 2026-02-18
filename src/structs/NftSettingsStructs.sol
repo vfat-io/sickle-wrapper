@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IUniswapV3Pool } from
-    "../interfaces/external/IUniswapV3Pool.sol";
-import { RewardConfig } from "./PositionSettingsStructs.sol";
+import {IUniswapV3Pool} from "../interfaces/external/IUniswapV3Pool.sol";
+import {RewardConfig} from "./PositionSettingsStructs.sol";
 
 struct ExitConfig {
     int24 triggerTickLow;

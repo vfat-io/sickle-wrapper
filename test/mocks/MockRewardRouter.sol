@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from
-    "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IRewardRouter } from "../../src/interfaces/IRewardRouter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IRewardRouter} from "../../src/interfaces/IRewardRouter.sol";
 
 /// @dev Mock RewardRouter for testing.
 /// - onRewardsClaimed: pulls tokens from msg.sender, sends to user
@@ -18,11 +17,7 @@ contract MockRewardRouter is IRewardRouter {
     uint256[] public lastAmounts;
     bool public lastWasCompound;
 
-    function onRewardsClaimed(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external override {
+    function onRewardsClaimed(address user, address[] calldata tokens, uint256[] calldata amounts) external override {
         lastUser = user;
         lastTokens = tokens;
         lastAmounts = amounts;
@@ -30,18 +25,15 @@ contract MockRewardRouter is IRewardRouter {
 
         for (uint256 i; i < tokens.length; i++) {
             if (amounts[i] > 0) {
-                IERC20(tokens[i]).safeTransferFrom(
-                    msg.sender, user, amounts[i]
-                );
+                IERC20(tokens[i]).safeTransferFrom(msg.sender, user, amounts[i]);
             }
         }
     }
 
-    function onRewardsCompounded(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external override {
+    function onRewardsCompounded(address user, address[] calldata tokens, uint256[] calldata amounts)
+        external
+        override
+    {
         lastUser = user;
         lastTokens = tokens;
         lastAmounts = amounts;
@@ -50,9 +42,7 @@ contract MockRewardRouter is IRewardRouter {
         // Pull tokens from wrapper, then send them back (simulates processing)
         for (uint256 i; i < tokens.length; i++) {
             if (amounts[i] > 0) {
-                IERC20(tokens[i]).safeTransferFrom(
-                    msg.sender, address(this), amounts[i]
-                );
+                IERC20(tokens[i]).safeTransferFrom(msg.sender, address(this), amounts[i]);
                 IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
             }
         }

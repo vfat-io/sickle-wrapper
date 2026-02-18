@@ -3,18 +3,16 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { SickleWrapper } from "../src/SickleWrapper.sol";
-import { WrapperFactory } from "../src/WrapperFactory.sol";
-import { IFarmStrategy } from "../src/interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "../src/interfaces/INftFarmStrategy.sol";
-import { ISickleFactory } from "../src/interfaces/ISickleFactory.sol";
-import { IRewardRouter } from "../src/interfaces/IRewardRouter.sol";
-import { INonfungiblePositionManager } from
-    "../src/interfaces/external/INonfungiblePositionManager.sol";
-import { IUniswapV3Pool } from
-    "../src/interfaces/external/IUniswapV3Pool.sol";
+import {SickleWrapper} from "../src/SickleWrapper.sol";
+import {WrapperFactory} from "../src/WrapperFactory.sol";
+import {IFarmStrategy} from "../src/interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "../src/interfaces/INftFarmStrategy.sol";
+import {ISickleFactory} from "../src/interfaces/ISickleFactory.sol";
+import {IRewardRouter} from "../src/interfaces/IRewardRouter.sol";
+import {INonfungiblePositionManager} from "../src/interfaces/external/INonfungiblePositionManager.sol";
+import {IUniswapV3Pool} from "../src/interfaces/external/IUniswapV3Pool.sol";
 
 import {
     Farm,
@@ -35,27 +33,20 @@ import {
     NftMove,
     SimpleNftHarvest
 } from "../src/structs/NftFarmStrategyStructs.sol";
-import { PositionSettings } from "../src/structs/PositionSettingsStructs.sol";
-import { NftSettings } from "../src/structs/NftSettingsStructs.sol";
-import { SwapParams } from "../src/structs/SwapStructs.sol";
-import { ZapIn, ZapOut } from "../src/structs/ZapStructs.sol";
-import {
-    AddLiquidityParams,
-    RemoveLiquidityParams
-} from "../src/structs/LiquidityStructs.sol";
-import { NftZapIn, NftZapOut } from "../src/structs/NftZapStructs.sol";
-import {
-    NftAddLiquidity,
-    NftRemoveLiquidity,
-    Pool
-} from "../src/structs/NftLiquidityStructs.sol";
+import {PositionSettings} from "../src/structs/PositionSettingsStructs.sol";
+import {NftSettings} from "../src/structs/NftSettingsStructs.sol";
+import {SwapParams} from "../src/structs/SwapStructs.sol";
+import {ZapIn, ZapOut} from "../src/structs/ZapStructs.sol";
+import {AddLiquidityParams, RemoveLiquidityParams} from "../src/structs/LiquidityStructs.sol";
+import {NftZapIn, NftZapOut} from "../src/structs/NftZapStructs.sol";
+import {NftAddLiquidity, NftRemoveLiquidity, Pool} from "../src/structs/NftLiquidityStructs.sol";
 
-import { MockERC20 } from "./mocks/MockERC20.sol";
-import { MockERC721 } from "./mocks/MockERC721.sol";
-import { MockFarmStrategy } from "./mocks/MockFarmStrategy.sol";
-import { MockNftFarmStrategy } from "./mocks/MockNftFarmStrategy.sol";
-import { MockSickleFactory } from "./mocks/MockSickleFactory.sol";
-import { MockRewardRouter } from "./mocks/MockRewardRouter.sol";
+import {MockERC20} from "./mocks/MockERC20.sol";
+import {MockERC721} from "./mocks/MockERC721.sol";
+import {MockFarmStrategy} from "./mocks/MockFarmStrategy.sol";
+import {MockNftFarmStrategy} from "./mocks/MockNftFarmStrategy.sol";
+import {MockSickleFactory} from "./mocks/MockSickleFactory.sol";
+import {MockRewardRouter} from "./mocks/MockRewardRouter.sol";
 
 contract SickleWrapperTest is Test {
     SickleWrapper wrapper;
@@ -104,7 +95,7 @@ contract SickleWrapperTest is Test {
     // =========================================================================
 
     function _farm() internal pure returns (Farm memory) {
-        return Farm({ stakingContract: address(1), poolIndex: 0 });
+        return Farm({stakingContract: address(1), poolIndex: 0});
     }
 
     function _emptyZapIn() internal pure returns (ZapIn memory) {
@@ -141,7 +132,7 @@ contract SickleWrapperTest is Test {
             addLiquidityParams: NftAddLiquidity({
                 nft: INonfungiblePositionManager(address(0)),
                 tokenId: 0,
-                pool: Pool({ token0: address(0), token1: address(0), fee: 0 }),
+                pool: Pool({token0: address(0), token1: address(0), fee: 0}),
                 tickLower: 0,
                 tickUpper: 0,
                 amount0Desired: 0,
@@ -169,11 +160,7 @@ contract SickleWrapperTest is Test {
         });
     }
 
-    function _emptyPositionSettings()
-        internal
-        pure
-        returns (PositionSettings memory)
-    {
+    function _emptyPositionSettings() internal pure returns (PositionSettings memory) {
         PositionSettings memory ps;
         return ps;
     }
@@ -184,11 +171,7 @@ contract SickleWrapperTest is Test {
     }
 
     function _nftPosition() internal view returns (NftPosition memory) {
-        return NftPosition({
-            farm: _farm(),
-            nft: INonfungiblePositionManager(address(nft)),
-            tokenId: 1
-        });
+        return NftPosition({farm: _farm(), nft: INonfungiblePositionManager(address(nft)), tokenId: 1});
     }
 
     function _setupHarvestRewards(uint256 amount) internal {
@@ -207,20 +190,12 @@ contract SickleWrapperTest is Test {
         nftFarmStrategy.setHarvestRewards(tokens, amounts);
     }
 
-    function _singleAddress(address a)
-        internal
-        pure
-        returns (address[] memory arr)
-    {
+    function _singleAddress(address a) internal pure returns (address[] memory arr) {
         arr = new address[](1);
         arr[0] = a;
     }
 
-    function _singleUint(uint256 v)
-        internal
-        pure
-        returns (uint256[] memory arr)
-    {
+    function _singleUint(uint256 v) internal pure returns (uint256[] memory arr) {
         arr = new uint256[](1);
         arr[0] = v;
     }
@@ -231,22 +206,12 @@ contract SickleWrapperTest is Test {
 
     function test_onlyUser_deposit_reverts() public {
         DepositParams memory params = DepositParams({
-            farm: _farm(),
-            tokensIn: new address[](0),
-            amountsIn: new uint256[](0),
-            zap: _emptyZapIn(),
-            extraData: ""
+            farm: _farm(), tokensIn: new address[](0), amountsIn: new uint256[](0), zap: _emptyZapIn(), extraData: ""
         });
 
         vm.prank(attacker);
         vm.expectRevert(SickleWrapper.NotUser.selector);
-        wrapper.deposit(
-            params,
-            _emptyPositionSettings(),
-            new address[](0),
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit(params, _emptyPositionSettings(), new address[](0), address(0), bytes32(0));
     }
 
     function test_onlyUser_harvest_reverts() public {
@@ -254,11 +219,7 @@ contract SickleWrapperTest is Test {
         vm.expectRevert(SickleWrapper.NotUser.selector);
         wrapper.harvest(
             _farm(),
-            HarvestParams({
-                swaps: new SwapParams[](0),
-                extraData: "",
-                tokensOut: new address[](0)
-            }),
+            HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: new address[](0)}),
             new address[](0)
         );
     }
@@ -267,13 +228,7 @@ contract SickleWrapperTest is Test {
         vm.prank(attacker);
         vm.expectRevert(SickleWrapper.NotUser.selector);
         wrapper.withdraw(
-            _farm(),
-            WithdrawParams({
-                extraData: "",
-                zap: _emptyZapOut(),
-                tokensOut: new address[](0)
-            }),
-            new address[](0)
+            _farm(), WithdrawParams({extraData: "", zap: _emptyZapOut(), tokensOut: new address[](0)}), new address[](0)
         );
     }
 
@@ -309,21 +264,10 @@ contract SickleWrapperTest is Test {
         address[] memory tokensIn = _singleAddress(address(tokenA));
         uint256[] memory amountsIn = _singleUint(amount);
 
-        DepositParams memory params = DepositParams({
-            farm: _farm(),
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyZapIn(),
-            extraData: ""
-        });
+        DepositParams memory params =
+            DepositParams({farm: _farm(), tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyZapIn(), extraData: ""});
 
-        wrapper.deposit(
-            params,
-            _emptyPositionSettings(),
-            tokensIn,
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit(params, _emptyPositionSettings(), tokensIn, address(0), bytes32(0));
         vm.stopPrank();
 
         assertEq(farmStrategy.depositCalls(), 1);
@@ -342,13 +286,8 @@ contract SickleWrapperTest is Test {
         address[] memory tokensIn = _singleAddress(address(tokenA));
         uint256[] memory amountsIn = _singleUint(amount);
 
-        DepositParams memory params = DepositParams({
-            farm: _farm(),
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyZapIn(),
-            extraData: ""
-        });
+        DepositParams memory params =
+            DepositParams({farm: _farm(), tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyZapIn(), extraData: ""});
 
         wrapper.increase(params, tokensIn);
         vm.stopPrank();
@@ -364,16 +303,10 @@ contract SickleWrapperTest is Test {
         vm.startPrank(user);
         lpToken.approve(address(wrapper), amount);
 
-        SimpleDepositParams memory params = SimpleDepositParams({
-            farm: _farm(),
-            lpToken: address(lpToken),
-            amountIn: amount,
-            extraData: ""
-        });
+        SimpleDepositParams memory params =
+            SimpleDepositParams({farm: _farm(), lpToken: address(lpToken), amountIn: amount, extraData: ""});
 
-        wrapper.simpleDeposit(
-            params, _emptyPositionSettings(), address(0), bytes32(0)
-        );
+        wrapper.simpleDeposit(params, _emptyPositionSettings(), address(0), bytes32(0));
         vm.stopPrank();
 
         assertEq(farmStrategy.simpleDepositCalls(), 1);
@@ -388,12 +321,8 @@ contract SickleWrapperTest is Test {
         vm.startPrank(user);
         lpToken.approve(address(wrapper), amount);
 
-        SimpleDepositParams memory params = SimpleDepositParams({
-            farm: _farm(),
-            lpToken: address(lpToken),
-            amountIn: amount,
-            extraData: ""
-        });
+        SimpleDepositParams memory params =
+            SimpleDepositParams({farm: _farm(), lpToken: address(lpToken), amountIn: amount, extraData: ""});
 
         wrapper.simpleIncrease(params);
         vm.stopPrank();
@@ -414,13 +343,7 @@ contract SickleWrapperTest is Test {
 
         vm.prank(user);
         wrapper.harvest(
-            _farm(),
-            HarvestParams({
-                swaps: new SwapParams[](0),
-                extraData: "",
-                tokensOut: sweepTokens
-            }),
-            sweepTokens
+            _farm(), HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: sweepTokens}), sweepTokens
         );
 
         assertEq(farmStrategy.harvestCalls(), 1);
@@ -438,10 +361,7 @@ contract SickleWrapperTest is Test {
         address[] memory rewardTokens = _singleAddress(address(rewardToken));
 
         vm.prank(user);
-        wrapper.simpleHarvest(
-            _farm(),
-            SimpleHarvestParams({ rewardTokens: rewardTokens, extraData: "" })
-        );
+        wrapper.simpleHarvest(_farm(), SimpleHarvestParams({rewardTokens: rewardTokens, extraData: ""}));
 
         assertEq(farmStrategy.simpleHarvestCalls(), 1);
         assertEq(rewardToken.balanceOf(user), rewardAmount);
@@ -453,13 +373,7 @@ contract SickleWrapperTest is Test {
 
         vm.prank(user);
         wrapper.harvest(
-            _farm(),
-            HarvestParams({
-                swaps: new SwapParams[](0),
-                extraData: "",
-                tokensOut: sweepTokens
-            }),
-            sweepTokens
+            _farm(), HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: sweepTokens}), sweepTokens
         );
 
         assertEq(farmStrategy.harvestCalls(), 1);
@@ -475,28 +389,18 @@ contract SickleWrapperTest is Test {
         uint256 rewardAmount = 10e18;
         _setupHarvestRewards(rewardAmount);
 
-        address[] memory harvestSweepTokens =
-            _singleAddress(address(rewardToken));
-        address[] memory depositTokensIn =
-            _singleAddress(address(rewardToken));
+        address[] memory harvestSweepTokens = _singleAddress(address(rewardToken));
+        address[] memory depositTokensIn = _singleAddress(address(rewardToken));
         uint256[] memory depositAmountsIn = _singleUint(rewardAmount);
 
         DepositParams memory depositParams = DepositParams({
-            farm: _farm(),
-            tokensIn: depositTokensIn,
-            amountsIn: depositAmountsIn,
-            zap: _emptyZapIn(),
-            extraData: ""
+            farm: _farm(), tokensIn: depositTokensIn, amountsIn: depositAmountsIn, zap: _emptyZapIn(), extraData: ""
         });
 
         vm.prank(user);
         wrapper.compound(
             _farm(),
-            HarvestParams({
-                swaps: new SwapParams[](0),
-                extraData: "",
-                tokensOut: harvestSweepTokens
-            }),
+            HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: harvestSweepTokens}),
             harvestSweepTokens,
             depositParams,
             harvestSweepTokens
@@ -522,13 +426,7 @@ contract SickleWrapperTest is Test {
 
         vm.prank(user);
         wrapper.withdraw(
-            _farm(),
-            WithdrawParams({
-                extraData: "",
-                zap: _emptyZapOut(),
-                tokensOut: sweepTokens
-            }),
-            sweepTokens
+            _farm(), WithdrawParams({extraData: "", zap: _emptyZapOut(), tokensOut: sweepTokens}), sweepTokens
         );
 
         assertEq(farmStrategy.withdrawCalls(), 1);
@@ -542,12 +440,7 @@ contract SickleWrapperTest is Test {
 
         vm.prank(user);
         wrapper.simpleWithdraw(
-            _farm(),
-            SimpleWithdrawParams({
-                lpToken: address(lpToken),
-                amountOut: withdrawAmt,
-                extraData: ""
-            })
+            _farm(), SimpleWithdrawParams({lpToken: address(lpToken), amountOut: withdrawAmt, extraData: ""})
         );
 
         assertEq(farmStrategy.simpleWithdrawCalls(), 1);
@@ -560,25 +453,15 @@ contract SickleWrapperTest is Test {
         _setupHarvestRewards(rewardAmount);
         farmStrategy.setWithdrawResult(address(lpToken), withdrawAmt);
 
-        address[] memory harvestSweepTokens =
-            _singleAddress(address(rewardToken));
-        address[] memory withdrawSweepTokens =
-            _singleAddress(address(lpToken));
+        address[] memory harvestSweepTokens = _singleAddress(address(rewardToken));
+        address[] memory withdrawSweepTokens = _singleAddress(address(lpToken));
 
         vm.prank(user);
         wrapper.exit(
             _farm(),
-            HarvestParams({
-                swaps: new SwapParams[](0),
-                extraData: "",
-                tokensOut: harvestSweepTokens
-            }),
+            HarvestParams({swaps: new SwapParams[](0), extraData: "", tokensOut: harvestSweepTokens}),
             harvestSweepTokens,
-            WithdrawParams({
-                extraData: "",
-                zap: _emptyZapOut(),
-                tokensOut: withdrawSweepTokens
-            }),
+            WithdrawParams({extraData: "", zap: _emptyZapOut(), tokensOut: withdrawSweepTokens}),
             withdrawSweepTokens
         );
 
@@ -600,12 +483,8 @@ contract SickleWrapperTest is Test {
         vm.prank(user);
         wrapper.simpleExit(
             _farm(),
-            SimpleHarvestParams({ rewardTokens: rewardTokens, extraData: "" }),
-            SimpleWithdrawParams({
-                lpToken: address(lpToken),
-                amountOut: withdrawAmt,
-                extraData: ""
-            })
+            SimpleHarvestParams({rewardTokens: rewardTokens, extraData: ""}),
+            SimpleWithdrawParams({lpToken: address(lpToken), amountOut: withdrawAmt, extraData: ""})
         );
 
         assertEq(farmStrategy.simpleHarvestCalls(), 1);
@@ -628,23 +507,12 @@ contract SickleWrapperTest is Test {
         NftDeposit memory params = NftDeposit({
             farm: _farm(),
             nft: INonfungiblePositionManager(address(nft)),
-            increase: NftIncrease({
-                tokensIn: tokensIn,
-                amountsIn: amountsIn,
-                zap: _emptyNftZapIn(),
-                extraData: ""
-            })
+            increase: NftIncrease({tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyNftZapIn(), extraData: ""})
         });
 
         vm.startPrank(user);
         tokenA.approve(address(wrapper), amount);
-        wrapper.depositNft(
-            params,
-            _emptyNftSettings(),
-            tokensIn,
-            address(0),
-            bytes32(0)
-        );
+        wrapper.depositNft(params, _emptyNftSettings(), tokensIn, address(0), bytes32(0));
         vm.stopPrank();
 
         assertEq(nftFarmStrategy.depositCalls(), 1);
@@ -658,9 +526,7 @@ contract SickleWrapperTest is Test {
 
         vm.startPrank(user);
         nft.approve(address(wrapper), 1);
-        wrapper.simpleDepositNft(
-            _nftPosition(), "", _emptyNftSettings(), address(0), bytes32(0)
-        );
+        wrapper.simpleDepositNft(_nftPosition(), "", _emptyNftSettings(), address(0), bytes32(0));
         vm.stopPrank();
 
         assertEq(nftFarmStrategy.simpleDepositCalls(), 1);
@@ -680,12 +546,7 @@ contract SickleWrapperTest is Test {
         address[] memory sweepTokens = _singleAddress(address(rewardToken));
 
         NftHarvest memory params = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: sweepTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: sweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: sweepTokens
@@ -706,13 +567,7 @@ contract SickleWrapperTest is Test {
 
         vm.prank(user);
         wrapper.simpleHarvestNft(
-            _nftPosition(),
-            SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            })
+            _nftPosition(), SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""})
         );
 
         assertEq(nftFarmStrategy.simpleHarvestCalls(), 1);
@@ -732,28 +587,17 @@ contract SickleWrapperTest is Test {
         uint256[] memory amountsIn = _singleUint(rewardAmount);
 
         NftHarvest memory harvestParams = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: sweepTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: sweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: sweepTokens
         });
 
-        NftIncrease memory increaseParams = NftIncrease({
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyNftZapIn(),
-            extraData: ""
-        });
+        NftIncrease memory increaseParams =
+            NftIncrease({tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyNftZapIn(), extraData: ""});
 
         vm.prank(user);
-        wrapper.compoundNft(
-            _nftPosition(), harvestParams, increaseParams, sweepTokens
-        );
+        wrapper.compoundNft(_nftPosition(), harvestParams, increaseParams, sweepTokens);
 
         assertEq(nftFarmStrategy.harvestCalls(), 1);
         assertEq(nftFarmStrategy.increaseCalls(), 1);
@@ -771,20 +615,11 @@ contract SickleWrapperTest is Test {
         address[] memory tokensIn = _singleAddress(address(tokenA));
         uint256[] memory amountsIn = _singleUint(amount);
 
-        NftIncrease memory increaseParams = NftIncrease({
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyNftZapIn(),
-            extraData: ""
-        });
+        NftIncrease memory increaseParams =
+            NftIncrease({tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyNftZapIn(), extraData: ""});
 
         NftHarvest memory harvestParams = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: new address[](0),
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: new address[](0), amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: new address[](0)
@@ -792,9 +627,7 @@ contract SickleWrapperTest is Test {
 
         vm.startPrank(user);
         tokenA.approve(address(wrapper), amount);
-        wrapper.increaseNft(
-            _nftPosition(), harvestParams, increaseParams, true, tokensIn
-        );
+        wrapper.increaseNft(_nftPosition(), harvestParams, increaseParams, true, tokensIn);
         vm.stopPrank();
 
         assertEq(nftFarmStrategy.increaseCalls(), 1);
@@ -810,27 +643,16 @@ contract SickleWrapperTest is Test {
         address[] memory sweepTokens = _singleAddress(address(tokenA));
 
         NftHarvest memory harvestParams = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: new address[](0),
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: new address[](0), amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: new address[](0)
         });
 
-        NftWithdraw memory withdrawParams = NftWithdraw({
-            zap: _emptyNftZapOut(),
-            tokensOut: sweepTokens,
-            extraData: ""
-        });
+        NftWithdraw memory withdrawParams = NftWithdraw({zap: _emptyNftZapOut(), tokensOut: sweepTokens, extraData: ""});
 
         vm.prank(user);
-        wrapper.decreaseNft(
-            _nftPosition(), harvestParams, withdrawParams, true, sweepTokens
-        );
+        wrapper.decreaseNft(_nftPosition(), harvestParams, withdrawParams, true, sweepTokens);
 
         assertEq(nftFarmStrategy.decreaseCalls(), 1);
         assertEq(tokenA.balanceOf(user), withdrawAmt);
@@ -844,23 +666,13 @@ contract SickleWrapperTest is Test {
 
         address[] memory tokensIn = _singleAddress(address(tokenA));
         uint256[] memory amountsIn = _singleUint(amount);
-        address[] memory rewardSweepTokens =
-            _singleAddress(address(rewardToken));
+        address[] memory rewardSweepTokens = _singleAddress(address(rewardToken));
 
-        NftIncrease memory increaseParams = NftIncrease({
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyNftZapIn(),
-            extraData: ""
-        });
+        NftIncrease memory increaseParams =
+            NftIncrease({tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyNftZapIn(), extraData: ""});
 
         NftHarvest memory harvestParams = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: rewardSweepTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: rewardSweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: rewardSweepTokens
@@ -868,9 +680,7 @@ contract SickleWrapperTest is Test {
 
         vm.startPrank(user);
         tokenA.approve(address(wrapper), amount);
-        wrapper.increaseNft(
-            _nftPosition(), harvestParams, increaseParams, false, tokensIn
-        );
+        wrapper.increaseNft(_nftPosition(), harvestParams, increaseParams, false, tokensIn);
         vm.stopPrank();
 
         assertEq(nftFarmStrategy.increaseCalls(), 1);
@@ -888,11 +698,7 @@ contract SickleWrapperTest is Test {
 
         address[] memory sweepTokens = _singleAddress(address(tokenA));
 
-        NftWithdraw memory params = NftWithdraw({
-            zap: _emptyNftZapOut(),
-            tokensOut: sweepTokens,
-            extraData: ""
-        });
+        NftWithdraw memory params = NftWithdraw({zap: _emptyNftZapOut(), tokensOut: sweepTokens, extraData: ""});
 
         vm.prank(user);
         wrapper.withdrawNft(_nftPosition(), params, sweepTokens);
@@ -918,33 +724,21 @@ contract SickleWrapperTest is Test {
         _setupNftHarvestRewards(rewardAmount);
         nftFarmStrategy.setWithdrawResult(address(tokenA), withdrawAmt);
 
-        address[] memory rewardSweepTokens =
-            _singleAddress(address(rewardToken));
-        address[] memory withdrawSweepTokens =
-            _singleAddress(address(tokenA));
+        address[] memory rewardSweepTokens = _singleAddress(address(rewardToken));
+        address[] memory withdrawSweepTokens = _singleAddress(address(tokenA));
 
         NftHarvest memory harvestParams = NftHarvest({
-            harvest: SimpleNftHarvest({
-                rewardTokens: rewardSweepTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            harvest: SimpleNftHarvest({rewardTokens: rewardSweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             swaps: new SwapParams[](0),
             outputTokens: new address[](0),
             sweepTokens: rewardSweepTokens
         });
 
-        NftWithdraw memory withdrawParams = NftWithdraw({
-            zap: _emptyNftZapOut(),
-            tokensOut: withdrawSweepTokens,
-            extraData: ""
-        });
+        NftWithdraw memory withdrawParams =
+            NftWithdraw({zap: _emptyNftZapOut(), tokensOut: withdrawSweepTokens, extraData: ""});
 
         vm.prank(user);
-        wrapper.exitNft(
-            _nftPosition(), harvestParams, withdrawParams, withdrawSweepTokens
-        );
+        wrapper.exitNft(_nftPosition(), harvestParams, withdrawParams, withdrawSweepTokens);
 
         assertEq(nftFarmStrategy.harvestCalls(), 1);
         assertEq(nftFarmStrategy.withdrawCalls(), 1);
@@ -962,12 +756,7 @@ contract SickleWrapperTest is Test {
         vm.prank(user);
         wrapper.simpleExitNft(
             _nftPosition(),
-            SimpleNftHarvest({
-                rewardTokens: rewardTokens,
-                amount0Max: 0,
-                amount1Max: 0,
-                extraData: ""
-            }),
+            SimpleNftHarvest({rewardTokens: rewardTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
             ""
         );
 
@@ -991,26 +780,14 @@ contract SickleWrapperTest is Test {
             pool: IUniswapV3Pool(address(0)),
             position: _nftPosition(),
             harvest: NftHarvest({
-                harvest: SimpleNftHarvest({
-                    rewardTokens: sweepTokens,
-                    amount0Max: 0,
-                    amount1Max: 0,
-                    extraData: ""
-                }),
+                harvest: SimpleNftHarvest({rewardTokens: sweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
                 swaps: new SwapParams[](0),
                 outputTokens: new address[](0),
                 sweepTokens: sweepTokens
             }),
-            withdraw: NftWithdraw({
-                zap: _emptyNftZapOut(),
-                tokensOut: new address[](0),
-                extraData: ""
-            }),
+            withdraw: NftWithdraw({zap: _emptyNftZapOut(), tokensOut: new address[](0), extraData: ""}),
             increase: NftIncrease({
-                tokensIn: new address[](0),
-                amountsIn: new uint256[](0),
-                zap: _emptyNftZapIn(),
-                extraData: ""
+                tokensIn: new address[](0), amountsIn: new uint256[](0), zap: _emptyNftZapIn(), extraData: ""
             })
         });
 
@@ -1031,29 +808,17 @@ contract SickleWrapperTest is Test {
             pool: IUniswapV3Pool(address(0)),
             position: _nftPosition(),
             harvest: NftHarvest({
-                harvest: SimpleNftHarvest({
-                    rewardTokens: sweepTokens,
-                    amount0Max: 0,
-                    amount1Max: 0,
-                    extraData: ""
-                }),
+                harvest: SimpleNftHarvest({rewardTokens: sweepTokens, amount0Max: 0, amount1Max: 0, extraData: ""}),
                 swaps: new SwapParams[](0),
                 outputTokens: new address[](0),
                 sweepTokens: sweepTokens
             }),
-            withdraw: NftWithdraw({
-                zap: _emptyNftZapOut(),
-                tokensOut: new address[](0),
-                extraData: ""
-            }),
+            withdraw: NftWithdraw({zap: _emptyNftZapOut(), tokensOut: new address[](0), extraData: ""}),
             deposit: NftDeposit({
                 farm: _farm(),
                 nft: INonfungiblePositionManager(address(nft)),
                 increase: NftIncrease({
-                    tokensIn: new address[](0),
-                    amountsIn: new uint256[](0),
-                    zap: _emptyNftZapIn(),
-                    extraData: ""
+                    tokensIn: new address[](0), amountsIn: new uint256[](0), zap: _emptyNftZapIn(), extraData: ""
                 })
             })
         });
@@ -1110,23 +875,12 @@ contract SickleWrapperTest is Test {
         address[] memory tokensIn = _singleAddress(address(0));
         uint256[] memory amountsIn = _singleUint(1 ether);
 
-        DepositParams memory params = DepositParams({
-            farm: _farm(),
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyZapIn(),
-            extraData: ""
-        });
+        DepositParams memory params =
+            DepositParams({farm: _farm(), tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyZapIn(), extraData: ""});
 
         vm.deal(user, 1 ether);
         vm.prank(user);
-        wrapper.deposit{ value: 1 ether }(
-            params,
-            _emptyPositionSettings(),
-            new address[](0),
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit{value: 1 ether}(params, _emptyPositionSettings(), new address[](0), address(0), bytes32(0));
 
         assertEq(farmStrategy.depositCalls(), 1);
     }
@@ -1135,23 +889,12 @@ contract SickleWrapperTest is Test {
         address[] memory tokensIn = _singleAddress(ETH_ADDRESS);
         uint256[] memory amountsIn = _singleUint(1 ether);
 
-        DepositParams memory params = DepositParams({
-            farm: _farm(),
-            tokensIn: tokensIn,
-            amountsIn: amountsIn,
-            zap: _emptyZapIn(),
-            extraData: ""
-        });
+        DepositParams memory params =
+            DepositParams({farm: _farm(), tokensIn: tokensIn, amountsIn: amountsIn, zap: _emptyZapIn(), extraData: ""});
 
         vm.deal(user, 1 ether);
         vm.prank(user);
-        wrapper.deposit{ value: 1 ether }(
-            params,
-            _emptyPositionSettings(),
-            new address[](0),
-            address(0),
-            bytes32(0)
-        );
+        wrapper.deposit{value: 1 ether}(params, _emptyPositionSettings(), new address[](0), address(0), bytes32(0));
 
         assertEq(farmStrategy.depositCalls(), 1);
     }
@@ -1159,7 +902,7 @@ contract SickleWrapperTest is Test {
     function test_receiveETH() public {
         vm.deal(user, 1 ether);
         vm.prank(user);
-        (bool ok,) = address(wrapper).call{ value: 1 ether }("");
+        (bool ok,) = address(wrapper).call{value: 1 ether}("");
         assertTrue(ok);
         assertEq(address(wrapper).balance, 1 ether);
     }
@@ -1181,20 +924,12 @@ contract SickleWrapperTest is Test {
         vm.startPrank(user);
         lpToken.approve(address(wrapper), amount * 2);
 
-        SimpleDepositParams memory params = SimpleDepositParams({
-            farm: _farm(),
-            lpToken: address(lpToken),
-            amountIn: amount,
-            extraData: ""
-        });
+        SimpleDepositParams memory params =
+            SimpleDepositParams({farm: _farm(), lpToken: address(lpToken), amountIn: amount, extraData: ""});
 
-        wrapper.simpleDeposit(
-            params, _emptyPositionSettings(), address(0), bytes32(0)
-        );
+        wrapper.simpleDeposit(params, _emptyPositionSettings(), address(0), bytes32(0));
         // Second deposit — allowance to sickle should reset properly
-        wrapper.simpleDeposit(
-            params, _emptyPositionSettings(), address(0), bytes32(0)
-        );
+        wrapper.simpleDeposit(params, _emptyPositionSettings(), address(0), bytes32(0));
         vm.stopPrank();
 
         assertEq(farmStrategy.simpleDepositCalls(), 2);

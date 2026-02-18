@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { ISickleFactory } from "../../src/interfaces/ISickleFactory.sol";
+import {ISickleFactory} from "../../src/interfaces/ISickleFactory.sol";
 
 /// @dev Returns a deterministic address for any admin input.
 /// In tests we don't need a real Sickle — we just need the address

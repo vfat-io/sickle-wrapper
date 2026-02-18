@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IUniswapV3Pool } from
-    "../interfaces/external/IUniswapV3Pool.sol";
-import { INonfungiblePositionManager } from
-    "../interfaces/external/INonfungiblePositionManager.sol";
-import { NftZapIn, NftZapOut } from "./NftZapStructs.sol";
-import { SwapParams } from "./SwapStructs.sol";
-import { Farm } from "./FarmStrategyStructs.sol";
+import {IUniswapV3Pool} from "../interfaces/external/IUniswapV3Pool.sol";
+import {INonfungiblePositionManager} from "../interfaces/external/INonfungiblePositionManager.sol";
+import {NftZapIn, NftZapOut} from "./NftZapStructs.sol";
+import {SwapParams} from "./SwapStructs.sol";
+import {Farm} from "./FarmStrategyStructs.sol";
 
 struct NftPosition {
     Farm farm;

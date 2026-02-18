@@ -54,11 +54,11 @@ forge install
 # Compile
 forge build
 
-# Run tests
+# Run unit tests only
 forge test
 
-# Run tests with verbose output
-forge test -vvv
+# Run all tests (unit + fork) — requires a Base RPC endpoint
+BASE_RPC=https://... forge test -vvv
 
 # Gas report
 forge test --gas-report

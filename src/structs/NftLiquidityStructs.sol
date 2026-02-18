@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { INonfungiblePositionManager } from
-    "../interfaces/external/INonfungiblePositionManager.sol";
+import {INonfungiblePositionManager} from "../interfaces/external/INonfungiblePositionManager.sol";
 
 struct Pool {
     address token0;

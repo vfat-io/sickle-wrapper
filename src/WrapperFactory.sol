@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IFarmStrategy } from "./interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "./interfaces/INftFarmStrategy.sol";
-import { ISickleFactory } from "./interfaces/ISickleFactory.sol";
-import { IRewardRouter } from "./interfaces/IRewardRouter.sol";
-import { SickleWrapper } from "./SickleWrapper.sol";
+import {IFarmStrategy} from "./interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "./interfaces/INftFarmStrategy.sol";
+import {ISickleFactory} from "./interfaces/ISickleFactory.sol";
+import {IRewardRouter} from "./interfaces/IRewardRouter.sol";
+import {SickleWrapper} from "./SickleWrapper.sol";
 
 /// @title WrapperFactory
 /// @notice Deploys one SickleWrapper per user using CREATE2.
@@ -58,14 +58,12 @@ contract WrapperFactory {
     /// user can interact with their wrapper.
     /// @param user The end user address
     /// @return wrapper The user's SickleWrapper
-    function getOrCreateWrapper(
-        address user
-    ) external returns (SickleWrapper wrapper) {
+    function getOrCreateWrapper(address user) external returns (SickleWrapper wrapper) {
         wrapper = wrappers[user];
         if (address(wrapper) == address(0)) {
-            wrapper = new SickleWrapper{
-                salt: bytes32(uint256(uint160(user)))
-            }(user, farmStrategy, nftFarmStrategy, sickleFactory, rewardRouter);
+            wrapper = new SickleWrapper{salt: bytes32(uint256(uint160(user)))}(
+                user, farmStrategy, nftFarmStrategy, sickleFactory, rewardRouter
+            );
             wrappers[user] = wrapper;
             emit WrapperCreated(user, address(wrapper));
         }
@@ -84,13 +82,7 @@ contract WrapperFactory {
                 keccak256(
                     abi.encodePacked(
                         type(SickleWrapper).creationCode,
-                        abi.encode(
-                            user,
-                            farmStrategy,
-                            nftFarmStrategy,
-                            sickleFactory,
-                            rewardRouter
-                        )
+                        abi.encode(user, farmStrategy, nftFarmStrategy, sickleFactory, rewardRouter)
                     )
                 )
             )

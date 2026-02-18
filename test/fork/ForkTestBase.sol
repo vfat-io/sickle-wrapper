@@ -3,19 +3,18 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import { SickleWrapper } from "../../src/SickleWrapper.sol";
-import { WrapperFactory } from "../../src/WrapperFactory.sol";
-import { RewardRouter } from "../../src/RewardRouter.sol";
-import { IFarmStrategy } from "../../src/interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "../../src/interfaces/INftFarmStrategy.sol";
-import { ISickleFactory } from "../../src/interfaces/ISickleFactory.sol";
-import { IRewardRouter } from "../../src/interfaces/IRewardRouter.sol";
-import { INonfungiblePositionManager } from
-    "../../src/interfaces/external/INonfungiblePositionManager.sol";
-import { MockSwapConnector } from "./MockSwapConnector.sol";
+import {SickleWrapper} from "../../src/SickleWrapper.sol";
+import {WrapperFactory} from "../../src/WrapperFactory.sol";
+import {RewardRouter} from "../../src/RewardRouter.sol";
+import {IFarmStrategy} from "../../src/interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "../../src/interfaces/INftFarmStrategy.sol";
+import {ISickleFactory} from "../../src/interfaces/ISickleFactory.sol";
+import {IRewardRouter} from "../../src/interfaces/IRewardRouter.sol";
+import {INonfungiblePositionManager} from "../../src/interfaces/external/INonfungiblePositionManager.sol";
+import {MockSwapConnector} from "./MockSwapConnector.sol";
 
 // =========================================================================
 // Base Mainnet Addresses
@@ -28,34 +27,23 @@ library Base {
     address constant AERO = 0x940181a94A35A4569E4529A3CDfB74e38FD98631;
 
     // Aerodrome VAMM (ERC20 farms)
-    address constant VAMM_WETH_USDC =
-        0xcDAC0d6c6C59727a65F871236188350531885C43;
-    address constant VAMM_WETH_USDC_GAUGE =
-        0x519BBD1Dd8C6A94C46080E24f316c14Ee758C025;
+    address constant VAMM_WETH_USDC = 0xcDAC0d6c6C59727a65F871236188350531885C43;
+    address constant VAMM_WETH_USDC_GAUGE = 0x519BBD1Dd8C6A94C46080E24f316c14Ee758C025;
 
     // Aerodrome Slipstream / CL (NFT farms)
-    address constant CL200_WETH_AERO =
-        0x82321f3BEB69f503380D6B233857d5C43562e2D0;
-    address constant CL200_WETH_AERO_GAUGE =
-        0xdE8FF0D3e8ab225110B088a250b546015C567E27;
-    address constant SLIPSTREAM_NFT_MANAGER =
-        0x827922686190790b37229fd06084350E74485b72;
+    address constant CL200_WETH_AERO = 0x82321f3BEB69f503380D6B233857d5C43562e2D0;
+    address constant CL200_WETH_AERO_GAUGE = 0xdE8FF0D3e8ab225110B088a250b546015C567E27;
+    address constant SLIPSTREAM_NFT_MANAGER = 0x827922686190790b37229fd06084350E74485b72;
 
     // Aerodrome routers
-    address constant AERODROME_ROUTER =
-        0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43;
+    address constant AERODROME_ROUTER = 0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43;
 
     // Deployed Sickle contracts on Base
-    address constant SICKLE_FACTORY =
-        0x71D234A3e1dfC161cc1d081E6496e76627baAc31;
-    address constant FARM_STRATEGY =
-        0xbF325BC7921256f842B3BC99C8eF4E2f72999556;
-    address constant NFT_FARM_STRATEGY =
-        0x9699bE38E6D54E51a4b36645726FEE9CC736EB45;
-    address constant SICKLE_REGISTRY =
-        0x2Ef5EAFA8711E2441Bd519EED5d09F8DFEf2Ecf3;
-    address constant CONNECTOR_REGISTRY =
-        0x53E205dcEb0a2e95c88C6a0e80280d6003221FAF;
+    address constant SICKLE_FACTORY = 0x71D234A3e1dfC161cc1d081E6496e76627baAc31;
+    address constant FARM_STRATEGY = 0xbF325BC7921256f842B3BC99C8eF4E2f72999556;
+    address constant NFT_FARM_STRATEGY = 0x9699bE38E6D54E51a4b36645726FEE9CC736EB45;
+    address constant SICKLE_REGISTRY = 0x2Ef5EAFA8711E2441Bd519EED5d09F8DFEf2Ecf3;
+    address constant CONNECTOR_REGISTRY = 0x53E205dcEb0a2e95c88C6a0e80280d6003221FAF;
 }
 
 // =========================================================================
@@ -63,19 +51,11 @@ library Base {
 // =========================================================================
 
 interface ICLGauge {
-    function stakedByIndex(
-        address depositor,
-        uint256 index
-    ) external view returns (uint256);
+    function stakedByIndex(address depositor, uint256 index) external view returns (uint256);
 
-    function stakedLength(
-        address depositor
-    ) external view returns (uint256);
+    function stakedLength(address depositor) external view returns (uint256);
 
-    function earned(
-        address account,
-        uint256 tokenId
-    ) external view returns (uint256);
+    function earned(address account, uint256 tokenId) external view returns (uint256);
 }
 
 interface ICLPool {
@@ -111,30 +91,16 @@ interface ISlipstreamNFTManager {
         uint160 sqrtPriceX96;
     }
 
-    function mint(
-        MintParams calldata params
-    )
+    function mint(MintParams calldata params)
         external
         payable
-        returns (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        );
+        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 }
 
 interface IVAMMPool {
     function token0() external view returns (address);
     function token1() external view returns (address);
-    function getReserves()
-        external
-        view
-        returns (
-            uint256 reserve0,
-            uint256 reserve1,
-            uint256 blockTimestampLast
-        );
+    function getReserves() external view returns (uint256 reserve0, uint256 reserve1, uint256 blockTimestampLast);
     function totalSupply() external view returns (uint256);
 }
 
@@ -143,9 +109,7 @@ interface IVAMMGauge {
 }
 
 interface IPositionManager {
-    function positions(
-        uint256 tokenId
-    )
+    function positions(uint256 tokenId)
         external
         view
         returns (
@@ -166,25 +130,14 @@ interface IPositionManager {
 
 interface ISickleRegistry {
     function admin() external view returns (address);
-    function setWhitelistedCallers(
-        address[] calldata callers,
-        bool whitelisted
-    ) external;
-    function setWhitelistedTargets(
-        address[] calldata targets,
-        bool whitelisted
-    ) external;
+    function setWhitelistedCallers(address[] calldata callers, bool whitelisted) external;
+    function setWhitelistedTargets(address[] calldata targets, bool whitelisted) external;
 }
 
 interface IConnectorRegistry {
     function admin() external view returns (address);
-    function setConnectors(
-        address[] calldata targets,
-        address[] calldata connectors
-    ) external;
-    function connectorOf(
-        address target
-    ) external view returns (address);
+    function setConnectors(address[] calldata targets, address[] calldata connectors) external;
+    function connectorOf(address target) external view returns (address);
 }
 
 // =========================================================================
@@ -220,12 +173,7 @@ abstract contract ForkTestBase is Test {
         // Deploy our contracts on the fork
         rewardRouter = new RewardRouter(address(this), FEE_BPS, feeRecipient);
 
-        factory = new WrapperFactory(
-            farmStrategy,
-            nftFarmStrategy,
-            sickleFactory,
-            IRewardRouter(address(rewardRouter))
-        );
+        factory = new WrapperFactory(farmStrategy, nftFarmStrategy, sickleFactory, IRewardRouter(address(rewardRouter)));
 
         // Deploy MockSwapConnector and register it in the deployed Sickle
         // infrastructure so we can test compound/rebalance/move with mock swaps.
@@ -256,8 +204,7 @@ abstract contract ForkTestBase is Test {
         vm.stopPrank();
 
         // 2. Register the connector for mockRouter in ConnectorRegistry
-        IConnectorRegistry connectorRegistry =
-            IConnectorRegistry(Base.CONNECTOR_REGISTRY);
+        IConnectorRegistry connectorRegistry = IConnectorRegistry(Base.CONNECTOR_REGISTRY);
         address connectorAdmin = connectorRegistry.admin();
 
         vm.startPrank(connectorAdmin);
@@ -280,10 +227,7 @@ abstract contract ForkTestBase is Test {
     }
 
     /// @dev Round tick down to nearest tickSpacing
-    function _closestLowerTick(
-        int24 tick,
-        int24 tickSpacing
-    ) internal pure returns (int24) {
+    function _closestLowerTick(int24 tick, int24 tickSpacing) internal pure returns (int24) {
         if (tick < 0 && tick % tickSpacing != 0) {
             return (tick / tickSpacing - 1) * tickSpacing;
         }
@@ -291,10 +235,7 @@ abstract contract ForkTestBase is Test {
     }
 
     /// @dev Round tick up to nearest tickSpacing
-    function _closestUpperTick(
-        int24 tick,
-        int24 tickSpacing
-    ) internal pure returns (int24) {
+    function _closestUpperTick(int24 tick, int24 tickSpacing) internal pure returns (int24) {
         if (tick > 0 && tick % tickSpacing != 0) {
             return (tick / tickSpacing + 1) * tickSpacing;
         }

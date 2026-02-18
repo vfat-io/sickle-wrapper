@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { Test } from "forge-std/Test.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SwapParams } from "../../src/structs/SwapStructs.sol";
+import {Test} from "forge-std/Test.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SwapParams} from "../../src/structs/SwapStructs.sol";
 
 /// @dev Struct encoded in SwapParams.extraData when using MockSwapConnector.
 struct MockExtraData {
@@ -21,19 +21,13 @@ struct MockExtraData {
 /// SwapParams.extraData = abi.encode(MockExtraData({ tokenOut: <addr> }))
 contract MockSwapConnector is Test {
     function swapExactTokensForTokens(SwapParams memory swap) external {
-        MockExtraData memory extraData =
-            abi.decode(swap.extraData, (MockExtraData));
+        MockExtraData memory extraData = abi.decode(swap.extraData, (MockExtraData));
 
         // Transfer tokenIn away (to the "router" address as a burn sink)
         IERC20(swap.tokenIn).transfer(swap.router, swap.amountIn);
 
         // Mint tokenOut to this address (the Sickle, via delegatecall context)
-        uint256 balanceBefore =
-            IERC20(extraData.tokenOut).balanceOf(address(this));
-        deal(
-            extraData.tokenOut,
-            address(this),
-            swap.minAmountOut + balanceBefore
-        );
+        uint256 balanceBefore = IERC20(extraData.tokenOut).balanceOf(address(this));
+        deal(extraData.tokenOut, address(this), swap.minAmountOut + balanceBefore);
     }
 }

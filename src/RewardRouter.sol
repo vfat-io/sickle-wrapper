@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from
-    "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IRewardRouter } from "./interfaces/IRewardRouter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IRewardRouter} from "./interfaces/IRewardRouter.sol";
 
 /// @title RewardRouter
 /// @notice Reference implementation of IRewardRouter.
@@ -31,18 +30,10 @@ contract RewardRouter is IRewardRouter {
     event FeeUpdated(uint256 feeBps);
     event FeeRecipientUpdated(address feeRecipient);
     event RewardsClaimed(
-        address indexed user,
-        address indexed wrapper,
-        address[] tokens,
-        uint256[] userAmounts,
-        uint256[] feeAmounts
+        address indexed user, address indexed wrapper, address[] tokens, uint256[] userAmounts, uint256[] feeAmounts
     );
     event RewardsCompounded(
-        address indexed user,
-        address indexed wrapper,
-        address[] tokens,
-        uint256[] wrapperAmounts,
-        uint256[] feeAmounts
+        address indexed user, address indexed wrapper, address[] tokens, uint256[] wrapperAmounts, uint256[] feeAmounts
     );
 
     // =========================================================================
@@ -88,11 +79,7 @@ contract RewardRouter is IRewardRouter {
     // =========================================================================
 
     /// @inheritdoc IRewardRouter
-    function onRewardsClaimed(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external override {
+    function onRewardsClaimed(address user, address[] calldata tokens, uint256[] calldata amounts) external override {
         uint256[] memory userAmounts = new uint256[](tokens.length);
         uint256[] memory feeAmounts = new uint256[](tokens.length);
 
@@ -101,30 +88,27 @@ contract RewardRouter is IRewardRouter {
                 uint256 fee = (amounts[i] * feeBps) / BPS;
                 uint256 userAmount = amounts[i] - fee;
 
-                IERC20(tokens[i]).safeTransferFrom(
-                    msg.sender, user, userAmount
-                );
+                IERC20(tokens[i]).safeTransferFrom(msg.sender, user, userAmount);
                 if (fee > 0) {
-                    IERC20(tokens[i]).safeTransferFrom(
-                        msg.sender, feeRecipient, fee
-                    );
+                    IERC20(tokens[i]).safeTransferFrom(msg.sender, feeRecipient, fee);
                 }
 
                 userAmounts[i] = userAmount;
                 feeAmounts[i] = fee;
             }
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         emit RewardsClaimed(user, msg.sender, tokens, userAmounts, feeAmounts);
     }
 
     /// @inheritdoc IRewardRouter
-    function onRewardsCompounded(
-        address user,
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) external override {
+    function onRewardsCompounded(address user, address[] calldata tokens, uint256[] calldata amounts)
+        external
+        override
+    {
         uint256[] memory wrapperAmounts = new uint256[](tokens.length);
         uint256[] memory feeAmounts = new uint256[](tokens.length);
 
@@ -134,24 +118,20 @@ contract RewardRouter is IRewardRouter {
                 uint256 wrapperAmount = amounts[i] - fee;
 
                 // Send remainder back to wrapper (msg.sender) for re-deposit
-                IERC20(tokens[i]).safeTransferFrom(
-                    msg.sender, msg.sender, wrapperAmount
-                );
+                IERC20(tokens[i]).safeTransferFrom(msg.sender, msg.sender, wrapperAmount);
                 if (fee > 0) {
-                    IERC20(tokens[i]).safeTransferFrom(
-                        msg.sender, feeRecipient, fee
-                    );
+                    IERC20(tokens[i]).safeTransferFrom(msg.sender, feeRecipient, fee);
                 }
 
                 wrapperAmounts[i] = wrapperAmount;
                 feeAmounts[i] = fee;
             }
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
-        emit RewardsCompounded(
-            user, msg.sender, tokens, wrapperAmounts, feeAmounts
-        );
+        emit RewardsCompounded(user, msg.sender, tokens, wrapperAmounts, feeAmounts);
     }
 
     // =========================================================================

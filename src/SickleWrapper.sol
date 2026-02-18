@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from
-    "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { IERC721Receiver } from
-    "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import { IFarmStrategy } from "./interfaces/IFarmStrategy.sol";
-import { INftFarmStrategy } from "./interfaces/INftFarmStrategy.sol";
-import { ISickleFactory } from "./interfaces/ISickleFactory.sol";
-import { IRewardRouter } from "./interfaces/IRewardRouter.sol";
+import {IFarmStrategy} from "./interfaces/IFarmStrategy.sol";
+import {INftFarmStrategy} from "./interfaces/INftFarmStrategy.sol";
+import {ISickleFactory} from "./interfaces/ISickleFactory.sol";
+import {IRewardRouter} from "./interfaces/IRewardRouter.sol";
 import {
     Farm,
     DepositParams,
@@ -31,8 +29,8 @@ import {
     NftMove,
     SimpleNftHarvest
 } from "./structs/NftFarmStrategyStructs.sol";
-import { PositionSettings } from "./structs/PositionSettingsStructs.sol";
-import { NftSettings } from "./structs/NftSettingsStructs.sol";
+import {PositionSettings} from "./structs/PositionSettingsStructs.sol";
+import {NftSettings} from "./structs/NftSettingsStructs.sol";
 
 /// @title SickleWrapper
 /// @notice Per-user wrapper that owns a Sickle on behalf of a user.
@@ -112,15 +110,10 @@ contract SickleWrapper is IERC721Receiver {
     }
 
     /// @notice Accept ETH (Sickle unwraps WETH before sending to owner)
-    receive() external payable { }
+    receive() external payable {}
 
     /// @notice Accept ERC721 NFTs
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
@@ -139,22 +132,17 @@ contract SickleWrapper is IERC721Receiver {
         _pullTokens(params.tokensIn, params.amountsIn);
         _approveSickle(params.tokensIn, params.amountsIn);
 
-        farmStrategy.deposit{ value: msg.value }(
-            params, positionSettings, sweepTokens, approved, referralCode
-        );
+        farmStrategy.deposit{value: msg.value}(params, positionSettings, sweepTokens, approved, referralCode);
 
         _sweepToUser(sweepTokens);
     }
 
     /// @notice Add to an existing ERC20 farm position.
-    function increase(
-        DepositParams calldata params,
-        address[] calldata sweepTokens
-    ) external payable onlyUser {
+    function increase(DepositParams calldata params, address[] calldata sweepTokens) external payable onlyUser {
         _pullTokens(params.tokensIn, params.amountsIn);
         _approveSickle(params.tokensIn, params.amountsIn);
 
-        farmStrategy.increase{ value: msg.value }(params, sweepTokens);
+        farmStrategy.increase{value: msg.value}(params, sweepTokens);
 
         _sweepToUser(sweepTokens);
     }
@@ -169,15 +157,11 @@ contract SickleWrapper is IERC721Receiver {
         _pullToken(params.lpToken, params.amountIn);
         _approveTokenForSickle(params.lpToken, params.amountIn);
 
-        farmStrategy.simpleDeposit{ value: msg.value }(
-            params, positionSettings, approved, referralCode
-        );
+        farmStrategy.simpleDeposit{value: msg.value}(params, positionSettings, approved, referralCode);
     }
 
     /// @notice Simple increase (single LP token, no zap).
-    function simpleIncrease(
-        SimpleDepositParams calldata params
-    ) external onlyUser {
+    function simpleIncrease(SimpleDepositParams calldata params) external onlyUser {
         _pullToken(params.lpToken, params.amountIn);
         _approveTokenForSickle(params.lpToken, params.amountIn);
 
@@ -189,21 +173,17 @@ contract SickleWrapper is IERC721Receiver {
     // =========================================================================
 
     /// @notice Claim rewards with optional swap. Routed through RewardRouter.
-    function harvest(
-        Farm calldata farm,
-        HarvestParams calldata params,
-        address[] calldata sweepTokens
-    ) external onlyUser {
+    function harvest(Farm calldata farm, HarvestParams calldata params, address[] calldata sweepTokens)
+        external
+        onlyUser
+    {
         farmStrategy.harvest(farm, params, sweepTokens);
 
         _routeRewards(sweepTokens, false);
     }
 
     /// @notice Simple claim (no swap). Routed through RewardRouter.
-    function simpleHarvest(
-        Farm calldata farm,
-        SimpleHarvestParams calldata params
-    ) external onlyUser {
+    function simpleHarvest(Farm calldata farm, SimpleHarvestParams calldata params) external onlyUser {
         farmStrategy.simpleHarvest(farm, params);
 
         _routeRewards(params.rewardTokens, false);
@@ -247,21 +227,17 @@ contract SickleWrapper is IERC721Receiver {
     // =========================================================================
 
     /// @notice Withdraw with zap. LP/tokens sent directly to user.
-    function withdraw(
-        Farm calldata farm,
-        WithdrawParams calldata params,
-        address[] calldata sweepTokens
-    ) external onlyUser {
+    function withdraw(Farm calldata farm, WithdrawParams calldata params, address[] calldata sweepTokens)
+        external
+        onlyUser
+    {
         farmStrategy.withdraw(farm, params, sweepTokens);
 
         _sweepToUser(sweepTokens);
     }
 
     /// @notice Simple withdraw (single LP token). Sent directly to user.
-    function simpleWithdraw(
-        Farm calldata farm,
-        SimpleWithdrawParams calldata params
-    ) external onlyUser {
+    function simpleWithdraw(Farm calldata farm, SimpleWithdrawParams calldata params) external onlyUser {
         farmStrategy.simpleWithdraw(farm, params);
 
         _sweepTokenToUser(params.lpToken);
@@ -317,9 +293,7 @@ contract SickleWrapper is IERC721Receiver {
         _pullTokens(params.increase.tokensIn, params.increase.amountsIn);
         _approveSickle(params.increase.tokensIn, params.increase.amountsIn);
 
-        nftFarmStrategy.deposit{ value: msg.value }(
-            params, settings, sweepTokens, approved, referralCode
-        );
+        nftFarmStrategy.deposit{value: msg.value}(params, settings, sweepTokens, approved, referralCode);
 
         _sweepToUser(sweepTokens);
     }
@@ -333,18 +307,12 @@ contract SickleWrapper is IERC721Receiver {
         bytes32 referralCode
     ) external onlyUser {
         // Pull NFT from user → wrapper
-        IERC721(address(position.nft)).safeTransferFrom(
-            user, address(this), position.tokenId
-        );
+        IERC721(address(position.nft)).safeTransferFrom(user, address(this), position.tokenId);
 
         // Approve Sickle to pull NFT from wrapper
-        IERC721(address(position.nft)).approve(
-            _sickleAddress(), position.tokenId
-        );
+        IERC721(address(position.nft)).approve(_sickleAddress(), position.tokenId);
 
-        nftFarmStrategy.simpleDeposit(
-            position, extraData, settings, approved, referralCode
-        );
+        nftFarmStrategy.simpleDeposit(position, extraData, settings, approved, referralCode);
     }
 
     // =========================================================================
@@ -352,20 +320,14 @@ contract SickleWrapper is IERC721Receiver {
     // =========================================================================
 
     /// @notice Claim NFT position rewards with optional swap. Routed.
-    function harvestNft(
-        NftPosition calldata position,
-        NftHarvest calldata params
-    ) external onlyUser {
+    function harvestNft(NftPosition calldata position, NftHarvest calldata params) external onlyUser {
         nftFarmStrategy.harvest(position, params);
 
         _routeRewards(params.sweepTokens, false);
     }
 
     /// @notice Simple NFT claim (no swap). Routed through RewardRouter.
-    function simpleHarvestNft(
-        NftPosition calldata position,
-        SimpleNftHarvest calldata params
-    ) external onlyUser {
+    function simpleHarvestNft(NftPosition calldata position, SimpleNftHarvest calldata params) external onlyUser {
         nftFarmStrategy.simpleHarvest(position, params);
 
         _routeRewards(params.rewardTokens, false);
@@ -396,9 +358,7 @@ contract SickleWrapper is IERC721Receiver {
         _approveSickle(increaseParams.tokensIn, increaseParams.amountsIn);
 
         // 3. Increase position in-place
-        nftFarmStrategy.increase{ value: msg.value }(
-            position, harvestParams, increaseParams, true, sweepTokens
-        );
+        nftFarmStrategy.increase{value: msg.value}(position, harvestParams, increaseParams, true, sweepTokens);
 
         _sweepToUser(sweepTokens);
     }
@@ -418,9 +378,7 @@ contract SickleWrapper is IERC721Receiver {
         _pullTokens(increaseParams.tokensIn, increaseParams.amountsIn);
         _approveSickle(increaseParams.tokensIn, increaseParams.amountsIn);
 
-        nftFarmStrategy.increase{ value: msg.value }(
-            position, harvestParams, increaseParams, inPlace, sweepTokens
-        );
+        nftFarmStrategy.increase{value: msg.value}(position, harvestParams, increaseParams, inPlace, sweepTokens);
 
         // Route harvest rewards if harvest happened
         if (!inPlace && harvestParams.sweepTokens.length > 0) {
@@ -438,9 +396,7 @@ contract SickleWrapper is IERC721Receiver {
         bool inPlace,
         address[] calldata sweepTokens
     ) external onlyUser {
-        nftFarmStrategy.decrease(
-            position, harvestParams, withdrawParams, inPlace, sweepTokens
-        );
+        nftFarmStrategy.decrease(position, harvestParams, withdrawParams, inPlace, sweepTokens);
 
         // Route harvest rewards if harvest happened
         if (!inPlace && harvestParams.sweepTokens.length > 0) {
@@ -455,27 +411,21 @@ contract SickleWrapper is IERC721Receiver {
     // =========================================================================
 
     /// @notice Withdraw from NFT farm with zap. Tokens sent to user.
-    function withdrawNft(
-        NftPosition calldata position,
-        NftWithdraw calldata params,
-        address[] calldata sweepTokens
-    ) external onlyUser {
+    function withdrawNft(NftPosition calldata position, NftWithdraw calldata params, address[] calldata sweepTokens)
+        external
+        onlyUser
+    {
         nftFarmStrategy.withdraw(position, params, sweepTokens);
 
         _sweepToUser(sweepTokens);
     }
 
     /// @notice Simple withdraw (unstake NFT and send to user).
-    function simpleWithdrawNft(
-        NftPosition calldata position,
-        bytes calldata extraData
-    ) external onlyUser {
+    function simpleWithdrawNft(NftPosition calldata position, bytes calldata extraData) external onlyUser {
         nftFarmStrategy.simpleWithdraw(position, extraData);
 
         // NFT is now in wrapper (transferred from Sickle to owner)
-        IERC721(address(position.nft)).safeTransferFrom(
-            address(this), user, position.tokenId
-        );
+        IERC721(address(position.nft)).safeTransferFrom(address(this), user, position.tokenId);
     }
 
     // =========================================================================
@@ -508,9 +458,7 @@ contract SickleWrapper is IERC721Receiver {
         _routeRewards(harvestParams.rewardTokens, false);
 
         nftFarmStrategy.simpleWithdraw(position, withdrawExtraData);
-        IERC721(address(position.nft)).safeTransferFrom(
-            address(this), user, position.tokenId
-        );
+        IERC721(address(position.nft)).safeTransferFrom(address(this), user, position.tokenId);
     }
 
     // =========================================================================
@@ -519,10 +467,7 @@ contract SickleWrapper is IERC721Receiver {
 
     /// @notice Rebalance an NFT position (harvest + withdraw + re-zap + deposit).
     /// Harvest rewards are routed through the RewardRouter.
-    function rebalanceNft(
-        NftRebalance calldata params,
-        address[] calldata sweepTokens
-    ) external onlyUser {
+    function rebalanceNft(NftRebalance calldata params, address[] calldata sweepTokens) external onlyUser {
         nftFarmStrategy.rebalance(params, sweepTokens);
 
         // Route the harvest rewards that landed in the wrapper
@@ -533,11 +478,10 @@ contract SickleWrapper is IERC721Receiver {
 
     /// @notice Move an NFT from one farm to another (harvest + withdraw + deposit).
     /// Harvest rewards are routed through the RewardRouter.
-    function moveNft(
-        NftMove calldata params,
-        NftSettings calldata settings,
-        address[] calldata sweepTokens
-    ) external onlyUser {
+    function moveNft(NftMove calldata params, NftSettings calldata settings, address[] calldata sweepTokens)
+        external
+        onlyUser
+    {
         nftFarmStrategy.move(params, settings, sweepTokens);
 
         // Route the harvest rewards that landed in the wrapper
@@ -559,16 +503,13 @@ contract SickleWrapper is IERC721Receiver {
     function rescueETH() external onlyUser {
         uint256 bal = address(this).balance;
         if (bal > 0) {
-            (bool ok,) = user.call{ value: bal }("");
+            (bool ok,) = user.call{value: bal}("");
             if (!ok) revert ETHTransferFailed();
         }
     }
 
     /// @notice Recover an ERC721 NFT stuck in the wrapper.
-    function rescueNft(
-        address nft,
-        uint256 tokenId
-    ) external onlyUser {
+    function rescueNft(address nft, uint256 tokenId) external onlyUser {
         IERC721(nft).safeTransferFrom(address(this), user, tokenId);
     }
 
@@ -577,13 +518,12 @@ contract SickleWrapper is IERC721Receiver {
     // =========================================================================
 
     /// @dev Pull ERC20 tokens from user into wrapper.
-    function _pullTokens(
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) private {
+    function _pullTokens(address[] calldata tokens, uint256[] calldata amounts) private {
         for (uint256 i; i < tokens.length;) {
             _pullToken(tokens[i], amounts[i]);
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -599,14 +539,13 @@ contract SickleWrapper is IERC721Receiver {
     /// @dev Approve the Sickle to pull tokens from wrapper.
     /// TransferLib.transferTokenFromUser does safeTransferFrom(owner, sickle, amount)
     /// where owner = this wrapper. The Sickle address is deterministic.
-    function _approveSickle(
-        address[] calldata tokens,
-        uint256[] calldata amounts
-    ) private {
+    function _approveSickle(address[] calldata tokens, uint256[] calldata amounts) private {
         address sickle = _sickleAddress();
         for (uint256 i; i < tokens.length;) {
             _approveFor(tokens[i], sickle, amounts[i]);
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -614,11 +553,7 @@ contract SickleWrapper is IERC721Receiver {
         _approveFor(token, _sickleAddress(), amount);
     }
 
-    function _approveFor(
-        address token,
-        address spender,
-        uint256 amount
-    ) private {
+    function _approveFor(address token, address spender, uint256 amount) private {
         if (_isETH(token) || amount == 0) return;
         IERC20 t = IERC20(token);
         uint256 allowance = t.allowance(address(this), spender);
@@ -634,7 +569,9 @@ contract SickleWrapper is IERC721Receiver {
     function _sweepToUser(address[] calldata tokens) private {
         for (uint256 i; i < tokens.length;) {
             _sweepTokenToUser(tokens[i]);
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -642,7 +579,7 @@ contract SickleWrapper is IERC721Receiver {
         if (_isETH(token)) {
             uint256 bal = address(this).balance;
             if (bal > 0) {
-                (bool ok,) = user.call{ value: bal }("");
+                (bool ok,) = user.call{value: bal}("");
                 if (!ok) revert ETHTransferFailed();
             }
         } else {
@@ -673,7 +610,9 @@ contract SickleWrapper is IERC721Receiver {
                     hasRewards = true;
                 }
             }
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         if (hasRewards) {
@@ -696,7 +635,6 @@ contract SickleWrapper is IERC721Receiver {
     }
 
     function _isETH(address token) private pure returns (bool) {
-        return token == address(0)
-            || token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        return token == address(0) || token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 }
